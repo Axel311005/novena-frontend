@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -18,44 +18,90 @@ interface NinoFormProps {
 export function NinoForm({ nino, onClose, onSuccess }: NinoFormProps) {
   const queryClient = useQueryClient();
   const isEditing = !!nino;
+  const [edadValue, setEdadValue] = useState<string>('');
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
+    watch,
   } = useForm<CreateNinoDto>({
     defaultValues: {
       primerNombre: '',
       segundoNombre: '',
       primerApellido: '',
       segundoApellido: '',
-      edad: 0,
+      edad: undefined as any,
       sexo: 'masculino',
     },
   });
 
+  const edad = watch('edad');
+
   useEffect(() => {
     if (nino) {
+      const edadStr = nino.edad ? String(nino.edad) : '';
+      setEdadValue(edadStr);
       reset({
         primerNombre: nino.primerNombre ?? '',
         segundoNombre: nino.segundoNombre ?? '',
         primerApellido: nino.primerApellido ?? '',
         segundoApellido: nino.segundoApellido ?? '',
-        edad: nino.edad || 0,
+        edad: nino.edad || undefined as any,
         sexo: nino.sexo || 'masculino',
       });
     } else {
+      setEdadValue('');
       reset({
         primerNombre: '',
         segundoNombre: '',
         primerApellido: '',
         segundoApellido: '',
-        edad: 0,
+        edad: undefined as any,
         sexo: 'masculino',
       });
     }
   }, [nino, reset]);
+
+  // Manejar cambio en el campo de edad
+  const handleEdadChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    
+    // Permitir borrar todo (campo vacío)
+    if (value === '') {
+      setEdadValue('');
+      setValue('edad', undefined as any, { shouldValidate: true });
+      return;
+    }
+
+    // Prevenir signo menos y caracteres no numéricos
+    if (value.includes('-') || isNaN(Number(value))) {
+      return;
+    }
+
+    const numValue = Number(value);
+    
+    // Prevenir 0
+    if (numValue === 0) {
+      return;
+    }
+
+    // Solo permitir números positivos
+    if (numValue > 0) {
+      setEdadValue(value);
+      setValue('edad', numValue, { shouldValidate: true });
+    }
+  };
+
+  // Prevenir teclas no deseadas
+  const handleEdadKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Prevenir signo menos, punto, y otros caracteres no deseados
+    if (e.key === '-' || e.key === '+' || e.key === 'e' || e.key === 'E' || e.key === '.') {
+      e.preventDefault();
+    }
+  };
 
   const createMutation = useMutation({
     mutationFn: createNino,
@@ -157,12 +203,26 @@ export function NinoForm({ nino, onClose, onSuccess }: NinoFormProps) {
               <Input
                 id="edad"
                 type="number"
+                min="1"
+                value={edadValue}
+                onChange={handleEdadChange}
+                onKeyDown={handleEdadKeyDown}
+                placeholder="Edad en años"
+              />
+              <input
+                type="hidden"
                 {...register('edad', { 
                   required: 'La edad es requerida',
                   valueAsNumber: true,
-                  min: { value: 1, message: 'La edad debe ser mayor a 0' }
+                  min: { value: 1, message: 'La edad debe ser mayor a 0' },
+                  validate: (value) => {
+                    if (!value || value === 0 || value < 1) {
+                      return 'La edad debe ser mayor a 0';
+                    }
+                    return true;
+                  }
                 })}
-                placeholder="Edad en años"
+                value={edad || ''}
               />
               {errors.edad && (
                 <p className="text-sm text-red-500 mt-1">{errors.edad.message}</p>
