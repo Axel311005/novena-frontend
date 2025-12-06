@@ -21,7 +21,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { setUser, isAuthenticated } = useAuthStore();
-  
+
   const {
     register,
     handleSubmit,
@@ -66,22 +66,25 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const userData = await loginAction({ email: data.email, password: data.password });
+      const userData = await loginAction({
+        email: data.email,
+        password: data.password,
+      });
 
       if (userData.token) {
         localStorage.setItem('token', userData.token);
       }
 
       setUser(userData);
-      
+
       const tieneAccesoPanel = hasAdminPanelAccess(userData.roles);
-      
+
       toast.success('¡Bienvenido de nuevo!');
 
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       const from = (location.state as any)?.from?.pathname;
-      
+
       if (tieneAccesoPanel) {
         navigate(from || '/admin', { replace: true });
       } else {
@@ -137,10 +140,19 @@ export default function LoginPage() {
                 transition={{ delay: 0.2, duration: 0.5 }}
                 className="flex items-center justify-center mb-6"
               >
-                <Logo variant="full" showText={true} className="justify-center" lightMode={true} />
+                <Logo
+                  variant="full"
+                  showText={true}
+                  className="justify-center"
+                  lightMode={true}
+                />
               </motion.div>
-              <h1 className="text-4xl font-bold text-white mb-2">Novena del Niño Dios</h1>
-              <p className="text-slate-300 text-sm">Inicia sesión para continuar</p>
+              <h1 className="text-4xl font-bold text-white mb-2">
+                Novena del Niño Dios
+              </h1>
+              <p className="text-slate-300 text-sm">
+                Inicia sesión para continuar
+              </p>
             </div>
 
             {/* Formulario */}
@@ -162,13 +174,17 @@ export default function LoginPage() {
                     })}
                     placeholder="correo@ejemplo.com"
                     className={`w-full px-4 py-3 pl-11 bg-slate-700/50 border rounded-xl text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition-all ${
-                      errors.email ? 'border-red-400 focus:border-red-400' : 'border-slate-600 focus:border-orange-500'
+                      errors.email
+                        ? 'border-red-400 focus:border-red-400'
+                        : 'border-slate-600 focus:border-orange-500'
                     }`}
                   />
                   <HiMail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                 </div>
                 {errors.email && (
-                  <p className="mt-1.5 text-xs text-red-400 font-medium">{errors.email.message}</p>
+                  <p className="mt-1.5 text-xs text-red-400 font-medium">
+                    {errors.email.message}
+                  </p>
                 )}
               </div>
 
@@ -184,12 +200,15 @@ export default function LoginPage() {
                       required: 'La contraseña es requerida',
                       minLength: {
                         value: 4,
-                        message: 'La contraseña debe tener al menos 4 caracteres',
+                        message:
+                          'La contraseña debe tener al menos 4 caracteres',
                       },
                     })}
                     placeholder="********"
                     className={`w-full px-4 py-3 pl-11 pr-11 bg-slate-700/50 border rounded-xl text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition-all ${
-                      errors.password ? 'border-red-400 focus:border-red-400' : 'border-slate-600 focus:border-orange-500'
+                      errors.password
+                        ? 'border-red-400 focus:border-red-400'
+                        : 'border-slate-600 focus:border-orange-500'
                     }`}
                   />
                   <HiLockClosed className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -206,7 +225,9 @@ export default function LoginPage() {
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="mt-1.5 text-xs text-red-400 font-medium">{errors.password.message}</p>
+                  <p className="mt-1.5 text-xs text-red-400 font-medium">
+                    {errors.password.message}
+                  </p>
                 )}
               </div>
 
@@ -226,23 +247,9 @@ export default function LoginPage() {
                 )}
               </button>
             </form>
-
-            {/* Link de registro */}
-            <div className="mt-6 pt-6 border-t border-slate-700">
-              <p className="text-center text-sm text-slate-300">
-                ¿No tienes cuenta?{' '}
-                <Link
-                  to="/register"
-                  className="text-orange-500 hover:text-orange-400 font-semibold transition-colors"
-                >
-                  Regístrate
-                </Link>
-              </p>
-            </div>
           </div>
         </motion.div>
       </div>
     </div>
   );
 }
-
