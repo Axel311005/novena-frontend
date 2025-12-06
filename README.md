@@ -1,70 +1,157 @@
-# Getting Started with Create React App
+# Novena del Niño Dios - Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Sistema de gestión de asistencias para la Novena del Niño Dios. Este frontend está construido con React, TypeScript, Vite y Tailwind CSS.
 
-## Available Scripts
+## 🚀 Características
 
-In the project directory, you can run:
+- **Autenticación JWT**: Sistema completo de login y registro de usuarios
+- **Gestión de Niños**: CRUD completo para registrar y gestionar información de los niños
+- **Control de Asistencias**: Registro y modificación de asistencias diarias
+- **Dashboard**: Vista general con estadísticas y resumen
+- **Diseño Moderno**: Interfaz limpia y moderna basada en las especificaciones de diseño
 
-### `npm start`
+## 📋 Requisitos Previos
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- Node.js 18+ 
+- npm o yarn
+- Backend API corriendo (ver configuración de `VITE_API_URL`)
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 🛠️ Instalación
 
-### `npm test`
+1. Clona el repositorio:
+```bash
+git clone <url-del-repositorio>
+cd novena-frontend
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+2. Instala las dependencias:
+```bash
+npm install
+```
 
-### `npm run build`
+3. Configura las variables de entorno:
+```bash
+cp .env.example .env
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Edita el archivo `.env` y configura la URL de tu API:
+```
+VITE_API_URL=http://localhost:3000
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## 🚀 Desarrollo
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Para iniciar el servidor de desarrollo:
 
-### `npm run eject`
+```bash
+npm run dev
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+La aplicación estará disponible en `http://localhost:5173`
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## 📦 Build para Producción
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+Para crear una build de producción:
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+```bash
+npm run build
+```
 
-## Learn More
+Los archivos optimizados se generarán en la carpeta `dist/`.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## 🏗️ Estructura del Proyecto
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```
+src/
+├── admin/          # Páginas del dashboard
+├── auth/           # Autenticación (login, registro, store)
+├── ninos/          # Módulo de gestión de niños
+│   ├── actions/    # Acciones para CRUD
+│   ├── api/        # Llamadas a la API
+│   ├── components/ # Componentes específicos
+│   ├── pages/      # Páginas del módulo
+│   └── types/      # Interfaces TypeScript
+├── asistencias/    # Módulo de gestión de asistencias
+│   ├── actions/    # Acciones para CRUD
+│   ├── api/        # Llamadas a la API
+│   ├── components/ # Componentes específicos
+│   ├── pages/      # Páginas del módulo
+│   └── types/      # Interfaces TypeScript
+├── shared/         # Código compartido
+│   ├── api/        # Configuración de axios e interceptores
+│   ├── components/ # Componentes reutilizables (UI, Layout)
+│   ├── hooks/      # Hooks personalizados
+│   ├── lib/        # Utilidades
+│   └── utils/      # Funciones auxiliares
+└── router/         # Configuración de rutas
+```
 
-### Code Splitting
+## 🔐 Autenticación
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+El sistema utiliza JWT (JSON Web Tokens) para la autenticación. Los tokens se almacenan en `localStorage` y se incluyen automáticamente en las peticiones mediante interceptores de Axios.
 
-### Analyzing the Bundle Size
+### Endpoints de Autenticación
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+- `POST /api/auth/login` - Iniciar sesión
+- `POST /api/auth/register` - Registrar nuevo usuario
+- `GET /api/auth/check-status` - Verificar estado de autenticación
 
-### Making a Progressive Web App
+## 📡 API Endpoints
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+### Niños
+- `GET /api/ninos` - Obtener todos los niños
+- `GET /api/ninos/:id` - Obtener un niño por ID
+- `POST /api/ninos` - Crear un nuevo niño
+- `PATCH /api/ninos/:id` - Actualizar un niño
+- `DELETE /api/ninos/:id` - Eliminar un niño
 
-### Advanced Configuration
+### Asistencias
+- `GET /api/asistencias` - Obtener todas las asistencias
+- `GET /api/asistencias/:id` - Obtener una asistencia por ID
+- `GET /api/asistencias/nino/:ninoId` - Obtener asistencias de un niño
+- `GET /api/asistencias/fecha/:fecha` - Obtener asistencias por fecha
+- `POST /api/asistencias` - Crear una nueva asistencia
+- `PATCH /api/asistencias/:id` - Actualizar una asistencia
+- `DELETE /api/asistencias/:id` - Eliminar una asistencia
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## 🎨 Tecnologías Utilizadas
 
-### Deployment
+- **React 19** - Biblioteca de UI
+- **TypeScript** - Tipado estático
+- **Vite** - Build tool y dev server
+- **React Router** - Enrutamiento
+- **TanStack Query** - Gestión de estado del servidor
+- **Zustand** - Gestión de estado global
+- **Axios** - Cliente HTTP
+- **Tailwind CSS** - Estilos
+- **React Hook Form** - Manejo de formularios
+- **Framer Motion** - Animaciones
+- **Lucide React** - Iconos
+- **Sonner** - Notificaciones toast
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+## 📝 Scripts Disponibles
 
-### `npm run build` fails to minify
+- `npm run dev` - Inicia el servidor de desarrollo
+- `npm run build` - Crea una build de producción
+- `npm run preview` - Previsualiza la build de producción
+- `npm run lint` - Ejecuta el linter
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## 🔒 Rutas Protegidas
+
+Las rutas bajo `/admin` requieren autenticación. Si un usuario no autenticado intenta acceder, será redirigido a la página de login.
+
+## 📱 Responsive Design
+
+La aplicación está completamente optimizada para dispositivos móviles, tablets y desktop.
+
+## 🤝 Contribuir
+
+1. Fork el proyecto
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
+
+## 📄 Licencia
+
+Este proyecto es privado y está destinado para uso interno.
