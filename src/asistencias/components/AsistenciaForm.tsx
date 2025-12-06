@@ -303,7 +303,7 @@ export function AsistenciaForm({
             {isEditing ? 'Editar Asistencia' : 'Registrar Asistencia'}
           </DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 md:space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 md:space-y-8">
           <div 
             className="transition-all duration-200"
             style={{ marginBottom: isOpen ? `${bottomMargin}px` : '0px' }}
@@ -403,7 +403,7 @@ export function AsistenciaForm({
             )}
           </div>
 
-          <div>
+          <div className="mt-6">
             <Label className="mb-3 block">Asistencias por Día</Label>
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 md:gap-4">
               {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((day) => (
