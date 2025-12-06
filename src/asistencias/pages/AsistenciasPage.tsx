@@ -1,10 +1,24 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Calendar, Plus, Edit, Trash2, CheckCircle, XCircle, Search } from 'lucide-react';
+import {
+  FaPlus,
+  FaEdit,
+  FaTrash,
+  FaCheckCircle,
+  FaTimesCircle,
+  FaSearch,
+  FaBell,
+  FaTree,
+} from 'react-icons/fa';
 import { toast } from 'sonner';
 import { getAsistencias, deleteAsistencia } from '../actions';
 import { getNinos } from '@/ninos/actions';
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import {
@@ -24,7 +38,8 @@ import type { PaginatedResponse } from '@/shared/types/pagination';
 
 export default function AsistenciasPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedAsistencia, setSelectedAsistencia] = useState<Asistencia | null>(null);
+  const [selectedAsistencia, setSelectedAsistencia] =
+    useState<Asistencia | null>(null);
   const queryClient = useQueryClient();
 
   // Hook de paginación inicial
@@ -32,7 +47,12 @@ export default function AsistenciasPage() {
 
   // Obtener asistencias con paginación
   const { data: asistenciasData, isLoading: isLoadingAsistencias } = useQuery({
-    queryKey: ['asistencias', pagination.limit, pagination.offset, pagination.searchQuery],
+    queryKey: [
+      'asistencias',
+      pagination.limit,
+      pagination.offset,
+      pagination.searchQuery,
+    ],
     queryFn: () =>
       getAsistencias({
         limit: pagination.limit,
@@ -41,10 +61,34 @@ export default function AsistenciasPage() {
       }),
   });
 
-  // Obtener todos los niños (sin paginación) para mostrar nombres
-  const { data: ninosData } = useQuery({
-    queryKey: ['ninos'],
-    queryFn: () => getNinos(),
+  // Obtener todos los niños usando la misma estrategia que NinosPage
+  // Usar un límite alto para obtener todos los niños de una vez
+  // La queryKey incluye 'ninos' para que se invalide cuando se crean/actualizan niños
+  const {
+    data: ninosData,
+    isLoading: isLoadingNinos,
+    error: ninosError,
+  } = useQuery({
+    queryKey: ['ninos', 1000, 0, ''],
+    queryFn: async () => {
+      try {
+        // Usar un límite alto para obtener todos los niños
+        const result = await getNinos({ limit: 1000, offset: 0 });
+        // Procesar el resultado: puede ser array o objeto paginado
+        if (Array.isArray(result)) {
+          return result;
+        }
+        // Si es objeto paginado, devolver el array de data
+        if (result && typeof result === 'object' && 'data' in result) {
+          const paginated = result as PaginatedResponse<any>;
+          return Array.isArray(paginated.data) ? paginated.data : [];
+        }
+        return [];
+      } catch (error) {
+        console.error('Error obteniendo niños:', error);
+        return [];
+      }
+    },
   });
 
   // Procesar datos de asistencias
@@ -52,7 +96,10 @@ export default function AsistenciasPage() {
     if (!asistenciasData) return { asistencias: [], totalItems: 0 };
 
     if (Array.isArray(asistenciasData)) {
-      return { asistencias: asistenciasData, totalItems: asistenciasData.length };
+      return {
+        asistencias: asistenciasData,
+        totalItems: asistenciasData.length,
+      };
     }
 
     const paginated = asistenciasData as PaginatedResponse<Asistencia>;
@@ -62,19 +109,28 @@ export default function AsistenciasPage() {
     };
   }, [asistenciasData]);
 
-  // Procesar datos de niños
+  // Procesar datos de niños - puede ser array o objeto paginado
   const ninos = useMemo(() => {
     if (!ninosData) return [];
-    if (Array.isArray(ninosData)) return ninosData;
-    const paginated = ninosData as PaginatedResponse<any>;
-    return paginated.data || [];
+    // Si es array, devolverlo directamente
+    if (Array.isArray(ninosData)) {
+      return ninosData;
+    }
+    // Si es objeto paginado, extraer el array de data
+    if (ninosData && typeof ninosData === 'object' && 'data' in ninosData) {
+      const paginated = ninosData as PaginatedResponse<any>;
+      return Array.isArray(paginated.data) ? paginated.data : [];
+    }
+    return [];
   }, [ninosData]);
 
   // Recalcular paginación con totalItems real
   const finalPagination = useTablePagination(totalItems);
 
   // Búsqueda con debounce - inicializar desde URL
-  const [searchInput, setSearchInput] = useState(() => finalPagination.searchQuery);
+  const [searchInput, setSearchInput] = useState(
+    () => finalPagination.searchQuery
+  );
   const debouncedSearch = useDebounce(searchInput, 500);
 
   // Actualizar URL cuando cambia el debounced search
@@ -87,7 +143,10 @@ export default function AsistenciasPage() {
 
   // Sincronizar searchInput cuando cambia la URL desde fuera (navegación, etc)
   useEffect(() => {
-    if (finalPagination.searchQuery !== searchInput && finalPagination.searchQuery !== debouncedSearch) {
+    if (
+      finalPagination.searchQuery !== searchInput &&
+      finalPagination.searchQuery !== debouncedSearch
+    ) {
       setSearchInput(finalPagination.searchQuery);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -95,7 +154,12 @@ export default function AsistenciasPage() {
 
   // Query con los valores finales de paginación
   const { data: finalAsistenciasData, isLoading: isLoadingFinal } = useQuery({
-    queryKey: ['asistencias', finalPagination.limit, finalPagination.offset, finalPagination.searchQuery],
+    queryKey: [
+      'asistencias',
+      finalPagination.limit,
+      finalPagination.offset,
+      finalPagination.searchQuery,
+    ],
     queryFn: () =>
       getAsistencias({
         limit: finalPagination.limit,
@@ -105,19 +169,23 @@ export default function AsistenciasPage() {
   });
 
   // Procesar datos finales
-  const { asistencias: finalAsistencias, totalItems: finalTotalItems } = useMemo(() => {
-    if (!finalAsistenciasData) return { asistencias: [], totalItems: 0 };
+  const { asistencias: finalAsistencias, totalItems: finalTotalItems } =
+    useMemo(() => {
+      if (!finalAsistenciasData) return { asistencias: [], totalItems: 0 };
 
-    if (Array.isArray(finalAsistenciasData)) {
-      return { asistencias: finalAsistenciasData, totalItems: finalAsistenciasData.length };
-    }
+      if (Array.isArray(finalAsistenciasData)) {
+        return {
+          asistencias: finalAsistenciasData,
+          totalItems: finalAsistenciasData.length,
+        };
+      }
 
-    const paginated = finalAsistenciasData as PaginatedResponse<Asistencia>;
-    return {
-      asistencias: paginated.data || [],
-      totalItems: paginated.total || 0,
-    };
-  }, [finalAsistenciasData]);
+      const paginated = finalAsistenciasData as PaginatedResponse<Asistencia>;
+      return {
+        asistencias: paginated.data || [],
+        totalItems: paginated.total || 0,
+      };
+    }, [finalAsistenciasData]);
 
   const deleteMutation = useMutation({
     mutationFn: deleteAsistencia,
@@ -163,15 +231,42 @@ export default function AsistenciasPage() {
     return dias.filter(Boolean).length;
   };
 
-  if (ninos.length === 0) {
+  // Mostrar loading mientras se cargan los niños
+  if (isLoadingNinos) {
+    return (
+      <div className="flex items-center justify-center min-h-[600px]">
+        <div className="w-12 h-12 border-2 border-orange-500/30 border-t-orange-500 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // Mostrar error si hay un error cargando los niños
+  if (ninosError) {
+    return (
+      <div className="flex items-center justify-center min-h-[600px]">
+        <Card className="w-full max-w-2xl">
+          <CardContent className="flex flex-col items-center justify-center py-12 px-6">
+            <p className="text-red-600">
+              Error al cargar los niños: {String(ninosError)}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Solo mostrar "Sin niños" si ya se cargaron los datos y no hay niños
+  if (!isLoadingNinos && !ninosError && ninos.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-[600px]">
         <Card className="w-full max-w-2xl">
           <CardContent className="flex flex-col items-center justify-center py-12 px-6">
             <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center mb-6">
-              <Calendar className="w-12 h-12 text-gray-400" />
+              <FaTree className="w-12 h-12 text-green-600" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Sin niños registrados</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Sin niños registrados
+            </h2>
             <p className="text-gray-600 text-center mb-6">
               Primero debes agregar niños para registrar sus asistencias
             </p>
@@ -199,14 +294,18 @@ export default function AsistenciasPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Control de Asistencias</h1>
-          <p className="text-gray-600 mt-1">Registra y gestiona las asistencias de los niños</p>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Control de Asistencias
+          </h1>
+          <p className="text-gray-600 mt-1">
+            Registra y gestiona las asistencias de los niños
+          </p>
         </div>
         <Button
           onClick={() => setIsFormOpen(true)}
           className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
         >
-          <Plus className="w-5 h-5 mr-2" />
+          <FaPlus className="w-5 h-5 mr-2" />
           Registrar Asistencia
         </Button>
       </div>
@@ -216,7 +315,7 @@ export default function AsistenciasPage() {
           <div className="flex items-center justify-between">
             <CardTitle>Lista de Asistencias</CardTitle>
             <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Input
                 type="text"
                 placeholder="Buscar por nombre del niño..."
@@ -230,9 +329,11 @@ export default function AsistenciasPage() {
         <CardContent className="p-0">
           {finalAsistencias.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 px-6">
-              <Calendar className="w-16 h-16 text-gray-400 mb-4" />
+              <FaBell className="w-16 h-16 text-yellow-500 mb-4" />
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                {finalPagination.searchQuery ? 'No se encontraron resultados' : 'No hay asistencias registradas'}
+                {finalPagination.searchQuery
+                  ? 'No se encontraron resultados'
+                  : 'No hay asistencias registradas'}
               </h3>
               <p className="text-gray-600 mb-4">
                 {finalPagination.searchQuery
@@ -244,7 +345,7 @@ export default function AsistenciasPage() {
                   onClick={() => setIsFormOpen(true)}
                   className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
                 >
-                  <Plus className="w-5 h-5 mr-2" />
+                  <FaPlus className="w-5 h-5 mr-2" />
                   Registrar Primera Asistencia
                 </Button>
               )}
@@ -256,9 +357,14 @@ export default function AsistenciasPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Niño</TableHead>
-                      <TableHead className="text-center">Días Asistidos</TableHead>
+                      <TableHead className="text-center">
+                        Días Asistidos
+                      </TableHead>
                       {Array.from({ length: 9 }).map((_, i) => (
-                        <TableHead key={`day-header-${i + 1}`} className="text-center">
+                        <TableHead
+                          key={`day-header-${i + 1}`}
+                          className="text-center"
+                        >
                           Día {i + 1}
                         </TableHead>
                       ))}
@@ -289,11 +395,14 @@ export default function AsistenciasPage() {
                             </span>
                           </TableCell>
                           {Array.from({ length: 9 }).map((_, i) => (
-                            <TableCell key={`day-status-${asistencia.id}-${i + 1}`} className="text-center">
+                            <TableCell
+                              key={`day-status-${asistencia.id}-${i + 1}`}
+                              className="text-center"
+                            >
                               {asistencia[`day${i + 1}` as keyof Asistencia] ? (
-                                <CheckCircle className="w-5 h-5 text-green-500 mx-auto" />
+                                <FaCheckCircle className="w-5 h-5 text-green-500 mx-auto" />
                               ) : (
-                                <XCircle className="w-5 h-5 text-red-500 mx-auto" />
+                                <FaTimesCircle className="w-5 h-5 text-red-500 mx-auto" />
                               )}
                             </TableCell>
                           ))}
@@ -304,14 +413,14 @@ export default function AsistenciasPage() {
                                 size="sm"
                                 onClick={() => handleEdit(asistencia)}
                               >
-                                <Edit className="w-4 h-4" />
+                                <FaEdit className="w-4 h-4" />
                               </Button>
                               <Button
                                 variant="destructive"
                                 size="sm"
                                 onClick={() => handleDelete(asistencia.id)}
                               >
-                                <Trash2 className="w-4 h-4" />
+                                <FaTrash className="w-4 h-4" />
                               </Button>
                             </div>
                           </TableCell>

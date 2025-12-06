@@ -1,0 +1,118 @@
+import { useNavigate } from 'react-router';
+
+interface LogoProps {
+  variant?: 'full' | 'icon' | 'compact';
+  className?: string;
+  showText?: boolean;
+  lightMode?: boolean; // Para fondos oscuros como en login
+}
+
+export function Logo({
+  variant = 'full',
+  className = '',
+  showText = true,
+  lightMode = false,
+}: LogoProps) {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate('/admin');
+  };
+
+  // Variante completa con logo y texto
+  if (variant === 'full') {
+    return (
+      <div
+        onClick={handleClick}
+        className={`flex items-center gap-3 cursor-pointer ${className}`}
+      >
+        <div className="shrink-0">
+          <img
+            src="/parroquia-logo.png"
+            alt="Parroquia Santa María de los Ángeles"
+            className="h-12 w-auto object-contain"
+            onError={(e) => {
+              // Fallback si la imagen no existe
+              const target = e.target as HTMLImageElement;
+              target.style.display = 'none';
+              const fallback = target.nextElementSibling as HTMLElement;
+              if (fallback) fallback.style.display = 'flex';
+            }}
+          />
+          <div
+            className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg"
+            style={{ display: 'none' }}
+          >
+            <span className="text-white">M</span>
+          </div>
+        </div>
+        {showText && (
+          <div className="flex flex-col">
+            <span
+              className={`text-sm font-semibold leading-tight ${
+                lightMode ? 'text-white' : 'text-gray-900'
+              }`}
+            >
+              Parroquia Santa María
+            </span>
+            <span
+              className={`text-xs leading-tight ${
+                lightMode ? 'text-slate-300' : 'text-gray-600'
+              }`}
+            >
+              de los Ángeles
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Variante solo icono
+  if (variant === 'icon') {
+    return (
+      <div onClick={handleClick} className={`cursor-pointer ${className}`}>
+        <img
+          src="/parroquia-logo.png"
+          alt="Parroquia Santa María de los Ángeles"
+          className="h-10 w-10 object-contain"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.style.display = 'none';
+            const fallback = target.nextElementSibling as HTMLElement;
+            if (fallback) fallback.style.display = 'flex';
+          }}
+        />
+        <div
+          className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold"
+          style={{ display: 'none' }}
+        >
+          <span className="text-white">M</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Variante compacta (para sidebar colapsado)
+  return (
+    <div onClick={handleClick} className={`cursor-pointer ${className}`}>
+      <img
+        src="/parroquia-logo.png"
+        alt="Parroquia"
+        className="h-10 w-10 object-contain"
+        onError={(e) => {
+          const target = e.target as HTMLImageElement;
+          target.style.display = 'none';
+          const fallback = target.nextElementSibling as HTMLElement;
+          if (fallback) fallback.style.display = 'flex';
+        }}
+      />
+      <div
+        className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold"
+        style={{ display: 'none' }}
+      >
+        <span className="text-white">M</span>
+      </div>
+    </div>
+  );
+}

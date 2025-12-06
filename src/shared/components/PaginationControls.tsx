@@ -6,7 +6,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/components/ui/select';
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import {
+  FaChevronLeft,
+  FaChevronRight,
+  FaAngleDoubleLeft,
+  FaAngleDoubleRight,
+} from 'react-icons/fa';
 
 interface PaginationControlsProps {
   currentPage: number;
@@ -30,7 +35,10 @@ export function PaginationControls({
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
   // Calcular totalPages correctamente
-  const calculatedTotalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+  const calculatedTotalPages = Math.max(
+    1,
+    Math.ceil(totalItems / itemsPerPage)
+  );
 
   const canGoPrevious = currentPage > 1;
   const canGoNext = currentPage < calculatedTotalPages;
@@ -39,16 +47,20 @@ export function PaginationControls({
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 bg-gray-50 border-t border-gray-200">
       {/* Información de registros */}
       <div className="text-sm text-gray-600 order-2 sm:order-1">
-        Mostrando <span className="font-semibold text-gray-900">{startItem}</span> a{' '}
+        Mostrando{' '}
+        <span className="font-semibold text-gray-900">{startItem}</span> a{' '}
         <span className="font-semibold text-gray-900">{endItem}</span> de{' '}
-        <span className="font-semibold text-gray-900">{totalItems}</span> registros
+        <span className="font-semibold text-gray-900">{totalItems}</span>{' '}
+        registros
       </div>
 
       {/* Controles de paginación */}
       <div className="flex items-center gap-2 sm:gap-3 order-1 sm:order-2">
         {/* Selector de límite */}
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600 whitespace-nowrap">Mostrar:</span>
+          <span className="text-sm text-gray-600 whitespace-nowrap">
+            Mostrar:
+          </span>
           <Select
             value={String(itemsPerPage)}
             onValueChange={(value) => onLimitChange(parseInt(value, 10))}
@@ -80,7 +92,7 @@ export function PaginationControls({
             className="h-9 px-2 sm:px-3 border-2 disabled:opacity-50"
             aria-label="Primera página"
           >
-            <ChevronsLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+            <FaAngleDoubleLeft className="h-4 w-4 sm:h-5 sm:w-5" />
           </Button>
           <Button
             variant="outline"
@@ -90,14 +102,14 @@ export function PaginationControls({
             className="h-9 px-2 sm:px-3 border-2 disabled:opacity-50"
             aria-label="Página anterior"
           >
-            <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+            <FaChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
           </Button>
-          
+
           {/* Indicador de página */}
           <div className="px-3 sm:px-4 py-1.5 text-sm font-medium text-gray-700 bg-white border-2 border-gray-300 rounded-md min-w-[80px] text-center">
             {currentPage} / {calculatedTotalPages}
           </div>
-          
+
           <Button
             variant="outline"
             size="sm"
@@ -106,7 +118,7 @@ export function PaginationControls({
             className="h-9 px-2 sm:px-3 border-2 disabled:opacity-50"
             aria-label="Página siguiente"
           >
-            <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
+            <FaChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
           </Button>
           <Button
             variant="outline"
@@ -116,11 +128,10 @@ export function PaginationControls({
             className="h-9 px-2 sm:px-3 border-2 disabled:opacity-50"
             aria-label="Última página"
           >
-            <ChevronsRight className="h-4 w-4 sm:h-5 sm:w-5" />
+            <FaAngleDoubleRight className="h-4 w-4 sm:h-5 sm:w-5" />
           </Button>
         </div>
       </div>
     </div>
   );
 }
-

@@ -1,8 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useAuthStore } from '@/auth/store/auth.store';
-import { LogOut, Menu, Users, Calendar, Home, FileText, UserPlus } from 'lucide-react';
+import {
+  FaUserPlus,
+  FaSignOutAlt,
+  FaBars,
+  FaGift,
+  FaSnowflake,
+  FaTree,
+  FaBell,
+} from 'react-icons/fa';
 import { Button } from '../ui/button';
+import { Logo } from '../Logo';
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -32,45 +41,48 @@ export function Layout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="flex h-screen w-full bg-gray-50 overflow-hidden">
-      {/* Sidebar Desktop */}
-      <div className={`hidden md:block bg-white border-r border-gray-200 transition-all duration-300 ${
-        sidebarOpen ? 'w-64' : 'w-16'
-      }`}>
+    <div className="flex h-screen w-full bg-white md:bg-gray-50 overflow-hidden">
+      {/* Sidebar Desktop - (No modificado) */}
+      <div
+        className={`hidden md:block bg-white border-r border-gray-200 transition-all duration-300 ${
+          sidebarOpen ? 'w-64' : 'w-16'
+        }`}
+      >
         <div className="h-full flex flex-col">
           <div className="p-4 border-b border-gray-200">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-              </div>
-              {sidebarOpen && (
-                <h1 className="text-xl font-bold text-gray-900">Novena</h1>
-              )}
-            </div>
+            {sidebarOpen ? (
+              <Logo variant="full" showText={true} />
+            ) : (
+              <Logo variant="icon" />
+            )}
           </div>
-          
+
           <nav className="flex-1 p-4 space-y-2">
             <button
               onClick={() => navigate('/admin')}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors"
+              className={`w-full flex items-center rounded-lg text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors ${
+                sidebarOpen ? 'gap-3 px-4 py-3' : 'justify-center p-3'
+              }`}
             >
-              <Home className="w-5 h-5" />
+              <FaTree className="w-5 h-5 shrink-0 text-green-600 animate-pulse" />
               {sidebarOpen && <span>Inicio</span>}
             </button>
             <button
               onClick={() => navigate('/admin/ninos')}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors"
+              className={`w-full flex items-center rounded-lg text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors ${
+                sidebarOpen ? 'gap-3 px-4 py-3' : 'justify-center p-3'
+              }`}
             >
-              <Users className="w-5 h-5" />
+              <FaSnowflake className="w-5 h-5 shrink-0 text-blue-400" />
               {sidebarOpen && <span>Gestión de Niños</span>}
             </button>
             <button
               onClick={() => navigate('/admin/asistencias')}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors"
+              className={`w-full flex items-center rounded-lg text-gray-700 hover:bg-green-50 hover:text-green-600 transition-colors ${
+                sidebarOpen ? 'gap-3 px-4 py-3' : 'justify-center p-3'
+              }`}
             >
-              <Calendar className="w-5 h-5" />
+              <FaBell className="w-5 h-5 shrink-0 text-yellow-500" />
               {sidebarOpen && <span>Control de Asistencias</span>}
             </button>
             {user?.roles.includes('admin') && (
@@ -78,16 +90,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <div className="border-t border-gray-200 my-2" />
                 <button
                   onClick={() => navigate('/admin/reportes')}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors"
+                  className={`w-full flex items-center rounded-lg text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors ${
+                    sidebarOpen ? 'gap-3 px-4 py-3' : 'justify-center p-3'
+                  }`}
                 >
-                  <FileText className="w-5 h-5" />
+                  <FaGift className="w-5 h-5 shrink-0 text-red-500" />
                   {sidebarOpen && <span>Reportes</span>}
                 </button>
                 <button
                   onClick={() => navigate('/admin/usuarios')}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors"
+                  className={`w-full flex items-center rounded-lg text-gray-700 hover:bg-green-50 hover:text-green-600 transition-colors ${
+                    sidebarOpen ? 'gap-3 px-4 py-3' : 'justify-center p-3'
+                  }`}
                 >
-                  <UserPlus className="w-5 h-5" />
+                  <FaUserPlus className="w-5 h-5 shrink-0 text-green-600" />
                   {sidebarOpen && <span>Usuarios</span>}
                 </button>
               </>
@@ -105,9 +121,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <Button
               onClick={handleLogout}
               variant="outline"
-              className="w-full"
+              className={`w-full flex items-center ${
+                sidebarOpen ? 'justify-start' : 'justify-center px-0'
+              }`}
             >
-              <LogOut className="w-4 h-4" />
+              <FaSignOutAlt className="w-5 h-5 shrink-0" />
               {sidebarOpen && <span className="ml-2">Cerrar Sesión</span>}
             </Button>
           </div>
@@ -116,10 +134,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Mobile Drawer */}
       {mobileDrawerOpen && (
-        <div className="fixed inset-0 z-50 flex md:hidden">
-          <div className="w-64 bg-white h-full shadow-xl">
+        <>
+          {/* Overlay oscuro - igual que mts: bg-black/80 para ver contenido opaco detrás */}
+          <div
+            onClick={() => setMobileDrawerOpen(false)}
+            className="fixed inset-0 bg-black/80 z-40 md:hidden transition-opacity duration-300"
+          />
+          {/* Sidebar móvil */}
+          <div className="fixed left-0 top-0 h-full w-64 bg-white shadow-2xl z-50 md:hidden overflow-y-auto">
             <div className="p-4 border-b border-gray-200">
-              <h1 className="text-xl font-bold text-gray-900">Novena</h1>
+              <Logo variant="full" showText={true} />
             </div>
             <nav className="p-4 space-y-2">
               <button
@@ -129,7 +153,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 }}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors"
               >
-                <Home className="w-5 h-5" />
+                <FaTree className="w-5 h-5 shrink-0 text-green-600 animate-pulse" />
                 <span>Inicio</span>
               </button>
               <button
@@ -137,9 +161,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   navigate('/admin/ninos');
                   setMobileDrawerOpen(false);
                 }}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors"
               >
-                <Users className="w-5 h-5" />
+                <FaSnowflake className="w-5 h-5 shrink-0 text-blue-400" />
                 <span>Gestión de Niños</span>
               </button>
               <button
@@ -147,9 +171,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   navigate('/admin/asistencias');
                   setMobileDrawerOpen(false);
                 }}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-green-50 hover:text-green-600 transition-colors"
               >
-                <Calendar className="w-5 h-5" />
+                <FaBell className="w-5 h-5 shrink-0 text-yellow-500" />
                 <span>Control de Asistencias</span>
               </button>
               {user?.roles.includes('admin') && (
@@ -160,9 +184,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       navigate('/admin/reportes');
                       setMobileDrawerOpen(false);
                     }}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors"
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors"
                   >
-                    <FileText className="w-5 h-5" />
+                    <FaGift className="w-5 h-5 shrink-0 text-red-500" />
                     <span>Reportes</span>
                   </button>
                   <button
@@ -170,48 +194,67 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       navigate('/admin/usuarios');
                       setMobileDrawerOpen(false);
                     }}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors"
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-green-50 hover:text-green-600 transition-colors"
                   >
-                    <UserPlus className="w-5 h-5" />
+                    <FaUserPlus className="w-5 h-5 shrink-0 text-green-600" />
                     <span>Usuarios</span>
                   </button>
                 </>
               )}
             </nav>
             <div className="p-4 border-t border-gray-200">
-              <Button onClick={handleLogout} variant="outline" className="w-full">
-                <LogOut className="w-4 h-4" />
+              <Button
+                onClick={handleLogout}
+                variant="outline"
+                className="w-full"
+              >
+                <FaSignOutAlt className="w-4 h-4 shrink-0" />
                 <span className="ml-2">Cerrar Sesión</span>
               </Button>
             </div>
           </div>
-          <div
-            onClick={() => setMobileDrawerOpen(false)}
-            className="flex-1 bg-black bg-opacity-40"
-          />
-        </div>
+        </>
       )}
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      {/* Main Content - sin translate en móvil para que se vea el contenido opaco detrás como en mts */}
+      <div className="flex-1 flex flex-col min-w-0 bg-white">
         {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+        <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between sticky top-0 z-30">
           <button
-            onClick={() => (isMobile ? setMobileDrawerOpen(true) : setSidebarOpen(!sidebarOpen))}
+            onClick={() =>
+              isMobile
+                ? setMobileDrawerOpen(true)
+                : setSidebarOpen(!sidebarOpen)
+            }
             className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
           >
-            <Menu className="w-5 h-5 text-gray-700" />
+            <FaBars className="w-5 h-5 text-gray-700" />
           </button>
-          <h2 className="text-lg font-semibold text-gray-900">Novena del Niño Dios</h2>
+          <div className="flex items-center gap-3">
+            <div className="hidden md:block shrink-0">
+              <img
+                src="/parroquia-logo.png"
+                alt="Parroquia Santa María de los Ángeles"
+                className="h-12 max-w-[50px] w-auto object-contain cursor-pointer"
+                onClick={() => navigate('/admin')}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                }}
+              />
+            </div>
+            <h2 className="text-lg font-semibold text-gray-900">
+              Novena del Niño Dios
+            </h2>
+          </div>
           <div className="w-10" />
         </header>
 
         {/* Content */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-white">
           {children}
         </main>
       </div>
     </div>
   );
 }
-

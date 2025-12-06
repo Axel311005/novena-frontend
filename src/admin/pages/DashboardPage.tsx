@@ -1,7 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
-import { Users, Calendar, CheckCircle, TrendingUp } from 'lucide-react';
+import {
+  FaUsers,
+  FaCalendarAlt,
+  FaCheckCircle,
+  FaChartLine,
+  FaStar,
+} from 'react-icons/fa';
 import { getDashboardStats } from '@/stats/actions';
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/shared/components/ui/card';
 
 export default function DashboardPage() {
   const { data: stats, isLoading } = useQuery({
@@ -35,8 +46,10 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Niños</CardTitle>
-            <Users className="h-5 w-5 text-orange-500" />
+            <CardTitle className="text-sm font-medium">
+              Total de Niños
+            </CardTitle>
+            <FaUsers className="h-5 w-5 text-orange-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalKids}</div>
@@ -46,8 +59,10 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Registros de Asistencia</CardTitle>
-            <Calendar className="h-5 w-5 text-orange-500" />
+            <CardTitle className="text-sm font-medium">
+              Registros de Asistencia
+            </CardTitle>
+            <FaCalendarAlt className="h-5 w-5 text-orange-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalAsistencias}</div>
@@ -57,23 +72,35 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Niños con Asistencia</CardTitle>
-            <CheckCircle className="h-5 w-5 text-green-500" />
+            <CardTitle className="text-sm font-medium">
+              Niños con Asistencia
+            </CardTitle>
+            <FaCheckCircle className="h-5 w-5 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.kidsWithAttendance}</div>
-            <p className="text-xs text-gray-600">Niños con al menos un registro</p>
+            <div className="text-2xl font-bold text-green-600">
+              {stats.kidsWithAttendance}
+            </div>
+            <p className="text-xs text-gray-600">
+              Niños con al menos un registro
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Promedio de Días</CardTitle>
-            <TrendingUp className="h-5 w-5 text-blue-500" />
+            <CardTitle className="text-sm font-medium">
+              Promedio de Días
+            </CardTitle>
+            <FaChartLine className="h-5 w-5 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats.averageDays}</div>
-            <p className="text-xs text-gray-600">Días asistidos por niño (promedio)</p>
+            <div className="text-2xl font-bold text-blue-600">
+              {stats.averageDays}
+            </div>
+            <p className="text-xs text-gray-600">
+              Días asistidos por niño (promedio)
+            </p>
           </CardContent>
         </Card>
       </div>

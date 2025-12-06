@@ -1,9 +1,15 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { FileText, Download, Loader2 } from 'lucide-react';
+import { FaGift, FaDownload, FaSpinner, FaFileAlt } from 'react-icons/fa';
 import { toast } from 'sonner';
 import { downloadPdfReport, downloadExcelReport } from '../actions';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 
 export default function ReportsPage() {
@@ -48,7 +54,9 @@ export default function ReportsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Reportes</h1>
-        <p className="text-gray-600 mt-1">Genera y descarga reportes de asistencias</p>
+        <p className="text-gray-600 mt-1">
+          Genera y descarga reportes de asistencias
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -56,17 +64,20 @@ export default function ReportsPage() {
           <CardHeader>
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-lg bg-red-100 flex items-center justify-center">
-                <FileText className="w-6 h-6 text-red-600" />
+                <FaGift className="w-6 h-6 text-red-600" />
               </div>
               <div>
                 <CardTitle>Reporte PDF</CardTitle>
-                <CardDescription>Descarga un reporte completo en formato PDF</CardDescription>
+                <CardDescription>
+                  Descarga un reporte completo en formato PDF
+                </CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-gray-600 mb-4">
-              Genera un reporte detallado de todas las asistencias en formato PDF, ideal para impresión y archivo.
+              Genera un reporte detallado de todas las asistencias en formato
+              PDF, ideal para impresión y archivo.
             </p>
             <Button
               onClick={handleDownloadPdf}
@@ -75,12 +86,12 @@ export default function ReportsPage() {
             >
               {downloadingPdf ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <FaSpinner className="w-4 h-4 mr-2 animate-spin" />
                   Generando...
                 </>
               ) : (
                 <>
-                  <Download className="w-4 h-4 mr-2" />
+                  <FaDownload className="w-4 h-4 mr-2" />
                   Descargar PDF
                 </>
               )}
@@ -92,17 +103,20 @@ export default function ReportsPage() {
           <CardHeader>
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
-                <FileText className="w-6 h-6 text-green-600" />
+                <FaFileAlt className="w-6 h-6 text-green-600" />
               </div>
               <div>
                 <CardTitle>Reporte Excel</CardTitle>
-                <CardDescription>Descarga un reporte completo en formato Excel</CardDescription>
+                <CardDescription>
+                  Descarga un reporte completo en formato Excel
+                </CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-gray-600 mb-4">
-              Genera un reporte detallado de todas las asistencias en formato Excel, ideal para análisis y manipulación de datos.
+              Genera un reporte detallado de todas las asistencias en formato
+              Excel, ideal para análisis y manipulación de datos.
             </p>
             <Button
               onClick={handleDownloadExcel}
@@ -111,12 +125,12 @@ export default function ReportsPage() {
             >
               {downloadingExcel ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <FaSpinner className="w-4 h-4 mr-2 animate-spin" />
                   Generando...
                 </>
               ) : (
                 <>
-                  <Download className="w-4 h-4 mr-2" />
+                  <FaDownload className="w-4 h-4 mr-2" />
                   Descargar Excel
                 </>
               )}
@@ -131,12 +145,13 @@ export default function ReportsPage() {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-gray-600">
-            Los reportes incluyen información completa de todos los niños registrados y sus asistencias.
-            Puedes descargar los reportes en formato PDF para impresión o en formato Excel para análisis de datos.
+            Los reportes incluyen información completa de todos los niños
+            registrados y sus asistencias. Puedes descargar los reportes en
+            formato PDF para impresión o en formato Excel para análisis de
+            datos.
           </p>
         </CardContent>
       </Card>
     </div>
   );
 }
-

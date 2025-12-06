@@ -1,14 +1,27 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/shared/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/shared/components/ui/dialog';
 import { Button } from '@/shared/components/ui/button';
 import { Label } from '@/shared/components/ui/label';
+import { Input } from '@/shared/components/ui/input';
+import { FaSearch, FaChevronDown, FaTimes } from 'react-icons/fa';
 import { createAsistencia, updateAsistencia } from '../actions';
 import { getNinos } from '@/ninos/actions';
 import { useQuery } from '@tanstack/react-query';
-import type { Asistencia, CreateAsistenciaDto } from '../types/asistencia.interface';
+import type {
+  Asistencia,
+  CreateAsistenciaDto,
+} from '../types/asistencia.interface';
+import type { Nino } from '@/ninos/types/nino.interface';
+import type { PaginatedResponse } from '@/shared/types/pagination';
 
 interface AsistenciaFormProps {
   asistencia?: Asistencia | null;
@@ -16,20 +29,59 @@ interface AsistenciaFormProps {
   onSuccess: () => void;
 }
 
-export function AsistenciaForm({ asistencia, onClose, onSuccess }: AsistenciaFormProps) {
+export function AsistenciaForm({
+  asistencia,
+  onClose,
+  onSuccess,
+}: AsistenciaFormProps) {
   const queryClient = useQueryClient();
   const isEditing = !!asistencia;
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
+  const comboboxRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const { data: ninos = [] } = useQuery({
-    queryKey: ['ninos'],
-    queryFn: getNinos,
+  // Obtener todos los niños usando la misma estrategia que AsistenciasPage
+  const { data: ninosData, isLoading: isLoadingNinos } = useQuery({
+    queryKey: ['ninos', 1000, 0, ''],
+    queryFn: async () => {
+      try {
+        const result = await getNinos({ limit: 1000, offset: 0 });
+        if (Array.isArray(result)) {
+          return result;
+        }
+        if (result && typeof result === 'object' && 'data' in result) {
+          const paginated = result as PaginatedResponse<Nino>;
+          return Array.isArray(paginated.data) ? paginated.data : [];
+        }
+        return [];
+      } catch (error) {
+        console.error('Error obteniendo niños:', error);
+        return [];
+      }
+    },
   });
+
+  // Procesar datos de niños
+  const ninos = useMemo(() => {
+    if (!ninosData) return [];
+    if (Array.isArray(ninosData)) {
+      return ninosData;
+    }
+    if (ninosData && typeof ninosData === 'object' && 'data' in ninosData) {
+      const paginated = ninosData as PaginatedResponse<Nino>;
+      return Array.isArray(paginated.data) ? paginated.data : [];
+    }
+    return [];
+  }, [ninosData]);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
+    watch,
+    setValue,
   } = useForm<CreateAsistenciaDto>({
     defaultValues: {
       kidId: 0,
@@ -44,6 +96,88 @@ export function AsistenciaForm({ asistencia, onClose, onSuccess }: AsistenciaFor
       day9: false,
     },
   });
+
+  const kidId = watch('kidId');
+
+  // Filtrar niños por búsqueda
+  const filteredNinos = useMemo(() => {
+    if (!searchQuery.trim()) return ninos;
+    const query = searchQuery.toLowerCase().trim();
+    return ninos.filter((nino) => {
+      const nombreCompleto = [
+        nino.primerNombre,
+        nino.segundoNombre,
+        nino.primerApellido,
+        nino.segundoApellido,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      return nombreCompleto.includes(query);
+    });
+  }, [ninos, searchQuery]);
+
+  // Obtener el nombre del niño seleccionado
+  const selectedNino = useMemo(() => {
+    if (!kidId) return null;
+    return ninos.find((n) => n.id === kidId);
+  }, [ninos, kidId]);
+
+  const selectedNinoName = useMemo(() => {
+    if (!selectedNino) return '';
+    return (
+      [
+        selectedNino.primerNombre,
+        selectedNino.segundoNombre,
+        selectedNino.primerApellido,
+        selectedNino.segundoApellido,
+      ]
+        .filter(Boolean)
+        .join(' ') || 'Sin nombre'
+    );
+  }, [selectedNino]);
+
+  // Cerrar cuando se hace click fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        comboboxRef.current &&
+        !comboboxRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [isOpen]);
+
+  // Manejar selección de niño
+  const handleSelectNino = (nino: Nino) => {
+    setValue('kidId', nino.id, { shouldValidate: true });
+    setSearchQuery('');
+    setIsOpen(false);
+  };
+
+  // Manejar cambio en el input de búsqueda
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setIsOpen(true);
+    if (!value && selectedNino) {
+      setValue('kidId', 0, { shouldValidate: true });
+    }
+  };
+
+  // Limpiar selección
+  const handleClear = () => {
+    setSearchQuery('');
+    setValue('kidId', 0, { shouldValidate: true });
+    setIsOpen(false);
+  };
 
   useEffect(() => {
     if (asistencia) {
@@ -88,8 +222,13 @@ export function AsistenciaForm({ asistencia, onClose, onSuccess }: AsistenciaFor
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<CreateAsistenciaDto> }) =>
-      updateAsistencia(id, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: number;
+      data: Partial<CreateAsistenciaDto>;
+    }) => updateAsistencia(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['asistencias'] });
       toast.success('Asistencia actualizada exitosamente');
@@ -112,56 +251,120 @@ export function AsistenciaForm({ asistencia, onClose, onSuccess }: AsistenciaFor
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-lg md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-y-auto w-[95vw] md:w-full">
         <DialogHeader>
-          <DialogTitle>{isEditing ? 'Editar Asistencia' : 'Registrar Asistencia'}</DialogTitle>
+          <DialogTitle>
+            {isEditing ? 'Editar Asistencia' : 'Registrar Asistencia'}
+          </DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 md:space-y-6">
+          <div className={isOpen ? 'mb-[120px] sm:mb-[120px] md:mb-[130px] transition-all duration-200' : ''}>
             <Label htmlFor="kidId">Niño *</Label>
-            <select
-              id="kidId"
-              {...register('kidId', {
-                required: 'Debes seleccionar un niño',
-                valueAsNumber: true,
-              })}
-              className="flex h-10 w-full rounded-lg border-2 border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/20 focus-visible:border-orange-500"
-              disabled={isEditing}
-            >
-              <option value={0}>Selecciona un niño</option>
-              {ninos.map((nino) => {
-                const nombreCompleto = [
-                  nino.primerNombre,
-                  nino.segundoNombre,
-                  nino.primerApellido,
-                  nino.segundoApellido,
-                ]
-                  .filter(Boolean)
-                  .join(' ') || 'Sin nombre';
-                return (
-                  <option key={nino.id} value={nino.id}>
-                    {nombreCompleto}
-                  </option>
-                );
-              })}
-            </select>
-            {errors.kidId && (
-              <p className="text-sm text-red-500 mt-1">{errors.kidId.message}</p>
+            {isLoadingNinos ? (
+              <div className="flex h-10 w-full items-center justify-center rounded-lg border-2 border-gray-300 bg-gray-50">
+                <span className="text-sm text-gray-500">Cargando niños...</span>
+              </div>
+            ) : (
+              <div ref={comboboxRef} className="relative max-w-md">
+                <div className="relative">
+                  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 z-10" />
+                  <Input
+                    ref={inputRef}
+                    id="kidId"
+                    type="text"
+                    placeholder="Buscar y seleccionar niño..."
+                    value={isOpen ? searchQuery : selectedNinoName || ''}
+                    onChange={(e) => handleSearchChange(e.target.value)}
+                    onFocus={() => {
+                      setIsOpen(true);
+                      if (!searchQuery && selectedNinoName) {
+                        setSearchQuery(selectedNinoName);
+                      }
+                    }}
+                    disabled={isEditing}
+                    className="pl-10 pr-10"
+                  />
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                    {selectedNino && !isEditing && (
+                      <button
+                        type="button"
+                        onClick={handleClear}
+                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        <FaTimes className="w-4 h-4" />
+                      </button>
+                    )}
+                    <FaChevronDown
+                      className={`w-4 h-4 text-gray-400 transition-transform ${
+                        isOpen ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </div>
+                </div>
+                {isOpen && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border-2 border-gray-200 rounded-lg shadow-lg h-[110px] sm:h-[110px] md:h-[120px] overflow-hidden flex flex-col">
+                    {filteredNinos.length === 0 ? (
+                      <div className="flex-1 flex items-center justify-center py-4 text-center text-sm text-gray-500 px-4">
+                        {searchQuery.trim()
+                          ? 'No se encontraron niños con ese nombre'
+                          : 'No hay niños registrados'}
+                      </div>
+                    ) : (
+                      <div className="flex-1 overflow-y-auto p-1">
+                        {filteredNinos.map((nino) => {
+                          const nombreCompleto =
+                            [
+                              nino.primerNombre,
+                              nino.segundoNombre,
+                              nino.primerApellido,
+                              nino.segundoApellido,
+                            ]
+                              .filter(Boolean)
+                              .join(' ') || 'Sin nombre';
+                          const isSelected = watch('kidId') === nino.id;
+                          return (
+                            <button
+                              key={nino.id}
+                              type="button"
+                              onClick={() => handleSelectNino(nino)}
+                              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                                isSelected
+                                  ? 'bg-orange-100 text-orange-600 font-medium'
+                                  : 'text-gray-700 hover:bg-orange-50 hover:text-orange-600'
+                              }`}
+                            >
+                              {nombreCompleto}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {errors.kidId && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {errors.kidId.message}
+                  </p>
+                )}
+              </div>
             )}
           </div>
 
           <div>
             <Label className="mb-3 block">Asistencias por Día</Label>
-            <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 md:gap-4">
               {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((day) => (
                 <div key={day} className="flex items-center space-x-2">
                   <input
                     type="checkbox"
                     id={`day${day}`}
                     {...register(`day${day}` as keyof CreateAsistenciaDto)}
-                    className="w-4 h-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500"
+                    className="w-4 h-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500 shrink-0"
                   />
-                  <Label htmlFor={`day${day}`} className="text-sm font-medium cursor-pointer">
+                  <Label
+                    htmlFor={`day${day}`}
+                    className="text-sm font-medium cursor-pointer whitespace-nowrap"
+                  >
                     Día {day}
                   </Label>
                 </div>
@@ -174,7 +377,11 @@ export function AsistenciaForm({ asistencia, onClose, onSuccess }: AsistenciaFor
               Cancelar
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Guardando...' : isEditing ? 'Actualizar' : 'Registrar'}
+              {isLoading
+                ? 'Guardando...'
+                : isEditing
+                ? 'Actualizar'
+                : 'Registrar'}
             </Button>
           </DialogFooter>
         </form>

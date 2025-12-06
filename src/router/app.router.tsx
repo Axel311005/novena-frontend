@@ -8,7 +8,9 @@ const LoginPage = lazy(() => import('../auth/pages/LoginPage'));
 const RegisterPage = lazy(() => import('../auth/pages/RegisterPage'));
 const DashboardPage = lazy(() => import('../admin/pages/DashboardPage'));
 const NinosPage = lazy(() => import('../ninos/pages/NinosPage'));
-const AsistenciasPage = lazy(() => import('../asistencias/pages/AsistenciasPage'));
+const AsistenciasPage = lazy(
+  () => import('../asistencias/pages/AsistenciasPage')
+);
 const ReportsPage = lazy(() => import('../reports/pages/ReportsPage'));
 const UsersPage = lazy(() => import('../users/pages/UsersPage'));
 
@@ -95,4 +97,3 @@ export const router = createBrowserRouter([
     element: <Navigate to="/admin" replace />,
   },
 ]);
-
