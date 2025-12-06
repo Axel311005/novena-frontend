@@ -179,6 +179,52 @@ export function AsistenciaForm({
     setIsOpen(false);
   };
 
+  // Calcular altura dinámica del dropdown según resultados
+  const dropdownHeight = useMemo(() => {
+    // Si no hay búsqueda o hay muchos resultados, usar altura fija por defecto
+    const hasSearch = searchQuery.trim().length > 0;
+    const resultCount = filteredNinos.length;
+    
+    // Si no hay búsqueda o hay más de 3 resultados, usar altura fija
+    if (!hasSearch || resultCount > 3) {
+      // Altura fija por defecto (como estaba antes)
+      return 110; // h-[110px] para móvil y tablet
+    }
+    
+    // Si hay búsqueda y pocos resultados (1-3), ajustar al tamaño
+    if (resultCount === 0) return 80;
+    
+    const itemHeight = 40; // altura aproximada de cada item
+    const padding = 8; // padding interno reducido
+    
+    // Si hay solo 1 resultado, hacerlo más compacto
+    if (resultCount === 1) {
+      return itemHeight + padding; // ~48px
+    }
+    
+    const calculatedHeight = resultCount * itemHeight + padding;
+    
+    // Mínimo 80px, máximo 200px
+    return Math.min(Math.max(calculatedHeight, 80), 200);
+  }, [filteredNinos.length, searchQuery]);
+
+  // Calcular margen inferior dinámico
+  const bottomMargin = useMemo(() => {
+    if (!isOpen) return 0;
+    return dropdownHeight + 20; // altura del dropdown + margen
+  }, [isOpen, dropdownHeight]);
+
+  // Manejar tecla Enter para seleccionar el primer resultado
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && filteredNinos.length > 0) {
+      e.preventDefault();
+      handleSelectNino(filteredNinos[0]);
+    } else if (e.key === 'Escape') {
+      setIsOpen(false);
+      setSearchQuery(selectedNinoName || '');
+    }
+  };
+
   useEffect(() => {
     if (asistencia) {
       reset({
@@ -258,7 +304,10 @@ export function AsistenciaForm({
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 md:space-y-6">
-          <div className={isOpen ? 'mb-[120px] sm:mb-[120px] md:mb-[130px] transition-all duration-200' : ''}>
+          <div 
+            className="transition-all duration-200"
+            style={{ marginBottom: isOpen ? `${bottomMargin}px` : '0px' }}
+          >
             <Label htmlFor="kidId">Niño *</Label>
             {isLoadingNinos ? (
               <div className="flex h-10 w-full items-center justify-center rounded-lg border-2 border-gray-300 bg-gray-50">
@@ -281,6 +330,7 @@ export function AsistenciaForm({
                         setSearchQuery(selectedNinoName);
                       }
                     }}
+                    onKeyDown={handleKeyDown}
                     disabled={isEditing}
                     className="pl-10 pr-10"
                   />
@@ -302,7 +352,10 @@ export function AsistenciaForm({
                   </div>
                 </div>
                 {isOpen && (
-                  <div className="absolute z-50 w-full mt-1 bg-white border-2 border-gray-200 rounded-lg shadow-lg h-[110px] sm:h-[110px] md:h-[120px] overflow-hidden flex flex-col">
+                  <div 
+                    className="absolute z-50 w-full mt-1 bg-white border-2 border-gray-200 rounded-lg shadow-lg overflow-hidden flex flex-col"
+                    style={{ height: `${dropdownHeight}px` }}
+                  >
                     {filteredNinos.length === 0 ? (
                       <div className="flex-1 flex items-center justify-center py-4 text-center text-sm text-gray-500 px-4">
                         {searchQuery.trim()
