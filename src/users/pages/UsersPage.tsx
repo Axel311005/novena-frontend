@@ -1,30 +1,14 @@
 import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { FaPlus, FaUserPlus, FaGift } from 'react-icons/fa';
-import { toast } from 'sonner';
-import { createUser } from '../actions';
+import { FaPlus, FaUserPlus } from 'react-icons/fa';
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
 } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { UserForm } from '../components/UserForm';
 
 export default function UsersPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
-
-  const createMutation = useMutation({
-    mutationFn: createUser,
-    onSuccess: () => {
-      toast.success('Usuario creado exitosamente');
-      setIsFormOpen(false);
-    },
-    onError: (error: any) => {
-      toast.error(error?.message || 'Error al crear el usuario');
-    },
-  });
 
   const handleCloseForm = () => {
     setIsFormOpen(false);

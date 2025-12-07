@@ -4,7 +4,6 @@ import {
   FaCalendarAlt,
   FaCheckCircle,
   FaChartLine,
-  FaStar,
 } from 'react-icons/fa';
 import { getDashboardStats } from '@/stats/actions';
 import {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router';
+import { useNavigate, useLocation } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { motion } from 'framer-motion';
 import { HiMail, HiLockClosed, HiEye, HiEyeOff } from 'react-icons/hi';
@@ -9,6 +9,7 @@ import { useAuthStore } from '../store/auth.store';
 import { checkAuthAction } from '../actions/check-status';
 import { hasAdminPanelAccess } from '@/shared/api/interceptors';
 import { Logo } from '@/shared/components/Logo';
+import { Footer } from '@/shared/components/Footer';
 
 interface LoginFormData {
   email: string;
@@ -114,7 +115,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
+    <div className="min-h-screen relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden flex flex-col">
       {/* Estrellas decorativas de fondo */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-20 w-2 h-2 bg-orange-500 rounded-full opacity-60 animate-pulse" />
@@ -123,7 +124,7 @@ export default function LoginPage() {
         <div className="absolute bottom-20 right-20 w-1.5 h-1.5 bg-orange-500 rounded-full opacity-60 animate-pulse delay-1000" />
       </div>
 
-      <div className="relative z-10 min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
+      <div className="relative z-10 flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -249,6 +250,11 @@ export default function LoginPage() {
             </form>
           </div>
         </motion.div>
+      </div>
+
+      {/* Footer */}
+      <div className="relative z-10">
+        <Footer darkMode={true} />
       </div>
     </div>
   );

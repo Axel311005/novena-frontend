@@ -1,4 +1,3 @@
-import { useNavigate } from 'react-router';
 
 interface LogoProps {
   variant?: 'full' | 'icon' | 'compact';
@@ -13,24 +12,18 @@ export function Logo({
   showText = true,
   lightMode = false,
 }: LogoProps) {
-  const navigate = useNavigate();
-
-  const handleClick = () => {
-    navigate('/admin');
-  };
-
   // Variante completa con logo y texto
   if (variant === 'full') {
     return (
       <div
-        onClick={handleClick}
-        className={`flex items-center gap-3 cursor-pointer ${className}`}
+        className={`flex items-center gap-3 ${className}`}
       >
-        <div className="shrink-0">
+        <div className="shrink-0 flex items-center justify-center">
           <img
-            src="/parroquia-logo.png"
+            src={lightMode ? "/jubileo-2025.png" : "/SMA.png"}
             alt="Parroquia Santa María de los Ángeles"
-            className="h-12 w-auto object-contain"
+            className="h-12 w-auto object-contain max-w-[48px]"
+            style={{ transform: 'scale(1.5)' }}
             onError={(e) => {
               // Fallback si la imagen no existe
               const target = e.target as HTMLImageElement;
@@ -71,11 +64,12 @@ export function Logo({
   // Variante solo icono
   if (variant === 'icon') {
     return (
-      <div onClick={handleClick} className={`cursor-pointer ${className}`}>
+      <div className={`flex items-center justify-center w-full ${className}`}>
         <img
-          src="/parroquia-logo.png"
+          src="/SMA.png"
           alt="Parroquia Santa María de los Ángeles"
           className="h-10 w-10 object-contain"
+          style={{ minWidth: '40px', minHeight: '40px', transform: 'scale(1.5)' }}
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.style.display = 'none';
@@ -95,11 +89,12 @@ export function Logo({
 
   // Variante compacta (para sidebar colapsado)
   return (
-    <div onClick={handleClick} className={`cursor-pointer ${className}`}>
+    <div className={`flex items-center justify-center w-full ${className}`}>
       <img
-        src="/parroquia-logo.png"
+        src="/SMA.png"
         alt="Parroquia"
         className="h-10 w-10 object-contain"
+        style={{ minWidth: '40px', minHeight: '40px', transform: 'scale(1.5)' }}
         onError={(e) => {
           const target = e.target as HTMLImageElement;
           target.style.display = 'none';

@@ -56,6 +56,16 @@ export const asistenciaApi = {
     return data;
   },
 
+  getByNino: async (ninoId: number): Promise<Asistencia[]> => {
+    const { data } = await novenaApi.get<Asistencia[]>(`/asistencias?kidId=${ninoId}`);
+    return data;
+  },
+
+  getByFecha: async (fecha: string): Promise<Asistencia[]> => {
+    const { data } = await novenaApi.get<Asistencia[]>(`/asistencias?fecha=${fecha}`);
+    return data;
+  },
+
   create: async (asistencia: CreateAsistenciaDto): Promise<Asistencia> => {
     const { data } = await novenaApi.post<Asistencia>('/asistencias', asistencia);
     return data;

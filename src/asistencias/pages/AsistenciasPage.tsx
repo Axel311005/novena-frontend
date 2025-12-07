@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   FaPlus,
@@ -46,7 +46,7 @@ export default function AsistenciasPage() {
   const pagination = useTablePagination(0);
 
   // Obtener asistencias con paginación
-  const { data: asistenciasData, isLoading: isLoadingAsistencias } = useQuery({
+  const { data: asistenciasData } = useQuery({
     queryKey: [
       'asistencias',
       pagination.limit,
@@ -92,19 +92,17 @@ export default function AsistenciasPage() {
   });
 
   // Procesar datos de asistencias
-  const { asistencias, totalItems } = useMemo(() => {
-    if (!asistenciasData) return { asistencias: [], totalItems: 0 };
+  const { totalItems } = useMemo(() => {
+    if (!asistenciasData) return { totalItems: 0 };
 
     if (Array.isArray(asistenciasData)) {
       return {
-        asistencias: asistenciasData,
         totalItems: asistenciasData.length,
       };
     }
 
     const paginated = asistenciasData as PaginatedResponse<Asistencia>;
     return {
-      asistencias: paginated.data || [],
       totalItems: paginated.total || 0,
     };
   }, [asistenciasData]);
@@ -153,7 +151,7 @@ export default function AsistenciasPage() {
   }, [finalPagination.searchQuery]);
 
   // Query con los valores finales de paginación
-  const { data: finalAsistenciasData, isLoading: isLoadingFinal } = useQuery({
+  const { data: finalAsistenciasData, isFetching } = useQuery({
     queryKey: [
       'asistencias',
       finalPagination.limit,
@@ -166,6 +164,7 @@ export default function AsistenciasPage() {
         offset: finalPagination.offset,
         ...(finalPagination.searchQuery && { q: finalPagination.searchQuery }),
       }),
+    placeholderData: (previousData) => previousData, // Mantener datos anteriores mientras busca
   });
 
   // Procesar datos finales
@@ -282,13 +281,6 @@ export default function AsistenciasPage() {
     );
   }
 
-  if (isLoadingFinal) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="w-12 h-12 border-2 border-orange-500/30 border-t-orange-500 rounded-full animate-spin" />
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -322,12 +314,26 @@ export default function AsistenciasPage() {
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 className="pl-10"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    finalPagination.setSearch(searchInput);
+                  }
+                }}
               />
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-0">
-          {finalAsistencias.length === 0 ? (
+        <CardContent className="p-0 relative">
+          {isFetching && finalAsistencias.length > 0 && (
+            <div className="absolute top-0 left-0 right-0 h-0.5 bg-orange-100 overflow-hidden z-10">
+              <div
+                className="h-full bg-gradient-to-r from-orange-500 to-orange-600 animate-pulse"
+                style={{ width: '100%' }}
+              />
+            </div>
+          )}
+          {finalAsistencias.length === 0 && !isFetching ? (
             <div className="flex flex-col items-center justify-center py-12 px-6">
               <FaBell className="w-16 h-16 text-yellow-500 mb-4" />
               <h3 className="text-xl font-semibold text-gray-900 mb-2">

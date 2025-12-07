@@ -1,5 +1,3 @@
-import type { Nino } from '@/ninos/types/nino.interface';
-
 export interface DashboardStats {
   totalKids: number;
   totalAsistencias: number;

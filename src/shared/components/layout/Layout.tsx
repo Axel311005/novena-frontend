@@ -49,7 +49,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         }`}
       >
         <div className="h-full flex flex-col">
-          <div className="p-4 border-b border-gray-200">
+          <div className="p-4 border-b border-gray-200 flex items-center justify-center">
             {sidebarOpen ? (
               <Logo variant="full" showText={true} />
             ) : (
@@ -233,9 +233,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-3">
             <div className="hidden md:block shrink-0">
               <img
-                src="/parroquia-logo.png"
-                alt="Parroquia Santa María de los Ángeles"
-                className="h-12 max-w-[50px] w-auto object-contain cursor-pointer"
+                src="/jubileo-2025.png"
+                alt="Jubileo 2025 - Peregrinos de Esperanza"
+                className="h-12 max-w-[120px] w-auto object-contain cursor-pointer"
                 onClick={() => navigate('/admin')}
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
