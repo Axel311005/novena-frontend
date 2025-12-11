@@ -268,20 +268,16 @@ export function AsistenciaForm({
         const details = error.response.data.details;
         const errorMessage = error.response.data.message || 'El niño ya tiene un registro de asistencia';
         
-        // Construir mensaje detallado
+        // Construir mensaje detallado sin información técnica
         let detailedMessage = errorMessage;
         if (details.nombre) {
           detailedMessage += `\n\nNiño: ${details.nombre}`;
         }
-        if (details.message) {
-          detailedMessage += `\n\n${details.message}`;
-        } else {
-          detailedMessage += '\n\nPara modificar la asistencia, use la opción de editar en la tabla de asistencias.';
-        }
+        detailedMessage += '\n\nPara modificar la asistencia, use la opción de editar en la tabla de asistencias.';
         
-        // Mostrar mensaje detallado con información del niño y asistencia existente
+        // Mostrar mensaje detallado con información del niño
         toast.error(detailedMessage, {
-          duration: 8000, // Mostrar por más tiempo para que se lea toda la información
+          duration: 6000, // Mostrar por más tiempo para que se lea toda la información
         });
       } else {
         // Error genérico
