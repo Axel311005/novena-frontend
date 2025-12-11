@@ -263,7 +263,30 @@ export function AsistenciaForm({
       onSuccess();
     },
     onError: (error: any) => {
-      toast.error(error?.message || 'Error al registrar la asistencia');
+      // Manejar error personalizado del backend cuando el niño ya tiene asistencia
+      if (error?.response?.status === 400 && error?.response?.data?.details) {
+        const details = error.response.data.details;
+        const errorMessage = error.response.data.message || 'El niño ya tiene un registro de asistencia';
+        
+        // Construir mensaje detallado
+        let detailedMessage = errorMessage;
+        if (details.nombre) {
+          detailedMessage += `\n\nNiño: ${details.nombre}`;
+        }
+        if (details.message) {
+          detailedMessage += `\n\n${details.message}`;
+        } else {
+          detailedMessage += '\n\nPara modificar la asistencia, use la opción de editar en la tabla de asistencias.';
+        }
+        
+        // Mostrar mensaje detallado con información del niño y asistencia existente
+        toast.error(detailedMessage, {
+          duration: 8000, // Mostrar por más tiempo para que se lea toda la información
+        });
+      } else {
+        // Error genérico
+        toast.error(error?.response?.data?.message || error?.message || 'Error al registrar la asistencia');
+      }
     },
   });
 
