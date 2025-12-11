@@ -34,6 +34,8 @@ export const asistenciaApi = {
         return {
           data: response.data,
           total: response.data.length,
+          limit: params.limit || 10,
+          offset: params.offset || 0,
         };
       }
     }
