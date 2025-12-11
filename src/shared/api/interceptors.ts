@@ -184,7 +184,7 @@ const isPublicEndpoint = (url: string): boolean => {
 };
 
 export const hasAdminPanelAccess = (roles: string[]): boolean => {
-  const ADMIN_PANEL_ROLES = ['admin', 'usuario'];
+  const ADMIN_PANEL_ROLES = ['admin', 'apuntador'];
   return roles.some((role) => ADMIN_PANEL_ROLES.includes(role));
 };
 

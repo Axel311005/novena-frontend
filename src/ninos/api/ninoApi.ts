@@ -22,26 +22,29 @@ export const ninoApi = {
       params: queryParams,
     });
 
-    // Si hay parámetros de paginación, el backend devuelve un objeto con data y total
-    if (params?.limit !== undefined || params?.offset !== undefined) {
-      if (typeof response.data === 'object' && 'data' in response.data) {
-        return response.data as PaginatedResponse<Nino>;
-      }
-      // Si devuelve array cuando se espera paginación, convertir
-      if (Array.isArray(response.data)) {
-        return {
-          data: response.data,
-          total: response.data.length,
-        };
-      }
+    // El backend siempre devuelve un objeto paginado cuando hay parámetros
+    // Verificar si response.data es un objeto paginado (tiene 'data' y 'total')
+    if (response.data && typeof response.data === 'object' && 'data' in response.data && 'total' in response.data) {
+      // Asegurar que el array data mantenga el orden original del backend
+      const paginated = response.data as PaginatedResponse<Nino>;
+      return {
+        ...paginated,
+        data: paginated.data || [], // Mantener orden exacto del backend
+      };
     }
 
-    // Sin paginación, devolver array directamente
+    // Si es un array (sin paginación), devolverlo directamente
     if (Array.isArray(response.data)) {
       return response.data;
     }
 
-    return [];
+    // Fallback: retornar estructura vacía
+    return {
+      data: [],
+      total: 0,
+      limit: params?.limit || 10,
+      offset: params?.offset || 0,
+    };
   },
 
   getById: async (id: number): Promise<Nino> => {

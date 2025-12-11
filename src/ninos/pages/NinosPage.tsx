@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { FaPlus, FaEdit, FaTrash, FaSearch, FaSnowflake } from 'react-icons/fa';
 import { toast } from 'sonner';
 import { getNinos, deleteNino } from '../actions';
+import { useAuthStore } from '@/auth/store/auth.store';
 import {
   Card,
   CardContent,
@@ -30,12 +31,39 @@ export default function NinosPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedNino, setSelectedNino] = useState<Nino | null>(null);
   const queryClient = useQueryClient();
+  const { user } = useAuthStore();
+  const isAdmin = user?.roles.includes('admin') ?? false;
 
-  // Hook de paginación inicial (sin totalItems aún)
+  // Hook de paginación - inicializar con 0, se actualizará cuando tengamos los datos
   const pagination = useTablePagination(0);
 
-  // Obtener niños con paginación
-  const { data: ninosData } = useQuery({
+  // Búsqueda con debounce - inicializar desde URL
+  const [searchInput, setSearchInput] = useState(
+    () => pagination.searchQuery
+  );
+  const debouncedSearch = useDebounce(searchInput, 500);
+
+  // Actualizar URL cuando cambia el debounced search
+  useEffect(() => {
+    if (debouncedSearch !== pagination.searchQuery) {
+      pagination.setSearch(debouncedSearch);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch]);
+
+  // Sincronizar searchInput cuando cambia la URL desde fuera (navegación, etc)
+  useEffect(() => {
+    if (
+      pagination.searchQuery !== searchInput &&
+      pagination.searchQuery !== debouncedSearch
+    ) {
+      setSearchInput(pagination.searchQuery);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pagination.searchQuery]);
+
+  // Query única para obtener niños con paginación
+  const { data: ninosData, isFetching } = useQuery({
     queryKey: [
       'ninos',
       pagination.limit,
@@ -50,79 +78,31 @@ export default function NinosPage() {
       }),
   });
 
-  // Procesar datos: puede ser array o objeto paginado
-  const { totalItems } = useMemo(() => {
+  // Procesar datos: mantener el orden exacto que viene del backend (sin modificar el orden)
+  const { ninos, totalItems } = useMemo(() => {
     if (!ninosData) return { ninos: [], totalItems: 0 };
 
+    // Si es un array directo (sin paginación)
     if (Array.isArray(ninosData)) {
-      return { totalItems: ninosData.length };
+      return { 
+        ninos: ninosData, // Mantener orden original del backend - NO modificar
+        totalItems: ninosData.length 
+      };
     }
 
+    // Si es un objeto paginado
     const paginated = ninosData as PaginatedResponse<Nino>;
+    // Asegurar que el array data mantenga el orden exacto del backend
+    const dataArray = paginated.data || [];
+    
     return {
+      ninos: dataArray, // Mantener orden original del backend - NO modificar
       totalItems: paginated.total || 0,
     };
   }, [ninosData]);
 
-  // Recalcular paginación con totalItems real
+  // Actualizar paginación con totalItems real para los controles
   const finalPagination = useTablePagination(totalItems);
-
-  // Búsqueda con debounce - inicializar desde URL
-  const [searchInput, setSearchInput] = useState(
-    () => finalPagination.searchQuery
-  );
-  const debouncedSearch = useDebounce(searchInput, 500);
-
-  // Actualizar URL cuando cambia el debounced search
-  useEffect(() => {
-    if (debouncedSearch !== finalPagination.searchQuery) {
-      finalPagination.setSearch(debouncedSearch);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearch]);
-
-  // Sincronizar searchInput cuando cambia la URL desde fuera (navegación, etc)
-  useEffect(() => {
-    if (
-      finalPagination.searchQuery !== searchInput &&
-      finalPagination.searchQuery !== debouncedSearch
-    ) {
-      setSearchInput(finalPagination.searchQuery);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [finalPagination.searchQuery]);
-
-  // Query con los valores finales de paginación
-  const { data: finalNinosData, isFetching } = useQuery({
-    queryKey: [
-      'ninos',
-      finalPagination.limit,
-      finalPagination.offset,
-      finalPagination.searchQuery,
-    ],
-    queryFn: () =>
-      getNinos({
-        limit: finalPagination.limit,
-        offset: finalPagination.offset,
-        ...(finalPagination.searchQuery && { q: finalPagination.searchQuery }),
-      }),
-    placeholderData: (previousData) => previousData, // Mantener datos anteriores mientras busca
-  });
-
-  // Procesar datos finales
-  const { ninos: finalNinos, totalItems: finalTotalItems } = useMemo(() => {
-    if (!finalNinosData) return { ninos: [], totalItems: 0 };
-
-    if (Array.isArray(finalNinosData)) {
-      return { ninos: finalNinosData, totalItems: finalNinosData.length };
-    }
-
-    const paginated = finalNinosData as PaginatedResponse<Nino>;
-    return {
-      ninos: paginated.data || [],
-      totalItems: paginated.total || 0,
-    };
-  }, [finalNinosData]);
 
   const deleteMutation = useMutation({
     mutationFn: deleteNino,
@@ -149,7 +129,9 @@ export default function NinosPage() {
   const handleCloseForm = () => {
     setIsFormOpen(false);
     setSelectedNino(null);
+    // Invalidar y refetch para obtener datos frescos con el orden correcto
     queryClient.invalidateQueries({ queryKey: ['ninos'] });
+    queryClient.refetchQueries({ queryKey: ['ninos'] });
   };
 
   return (
@@ -185,7 +167,7 @@ export default function NinosPage() {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
-                    finalPagination.setSearch(searchInput);
+                    pagination.setSearch(searchInput);
                   }
                 }}
               />
@@ -193,7 +175,7 @@ export default function NinosPage() {
           </div>
         </CardHeader>
         <CardContent className="p-0 relative">
-          {isFetching && finalNinos.length > 0 && (
+          {isFetching && ninos.length > 0 && (
             <div className="absolute top-0 left-0 right-0 h-0.5 bg-orange-100 overflow-hidden z-10">
               <div
                 className="h-full bg-gradient-to-r from-orange-500 to-orange-600 animate-pulse"
@@ -201,22 +183,22 @@ export default function NinosPage() {
               />
             </div>
           )}
-          {finalNinos.length === 0 && !isFetching ? (
+          {ninos.length === 0 && !isFetching ? (
             <div className="flex flex-col items-center justify-center py-16 px-6">
               <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-100 to-orange-50 flex items-center justify-center mb-4">
                 <FaSnowflake className="w-10 h-10 text-blue-400" />
               </div>
               <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                {finalPagination.searchQuery
+                {pagination.searchQuery
                   ? 'No se encontraron resultados'
                   : 'Sin niños registrados'}
               </h2>
               <p className="text-sm text-gray-500 text-center max-w-md">
-                {finalPagination.searchQuery
-                  ? `No hay niños que coincidan con "${finalPagination.searchQuery}". Intenta con otros términos de búsqueda.`
+                {pagination.searchQuery
+                  ? `No hay niños que coincidan con "${pagination.searchQuery}". Intenta con otros términos de búsqueda.`
                   : 'Comienza agregando el primer niño a la lista de la novena'}
               </p>
-              {!finalPagination.searchQuery && (
+              {!pagination.searchQuery && (
                 <Button
                   onClick={() => setIsFormOpen(true)}
                   className="mt-6 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
@@ -239,7 +221,7 @@ export default function NinosPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {finalNinos.map((nino) => (
+                    {ninos.map((nino) => (
                       <TableRow key={nino.id}>
                         <TableCell className="font-medium">
                           {[
@@ -268,13 +250,15 @@ export default function NinosPage() {
                             >
                               <FaEdit className="w-4 h-4" />
                             </Button>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => handleDelete(nino.id)}
-                            >
-                              <FaTrash className="w-4 h-4" />
-                            </Button>
+                            {isAdmin && (
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleDelete(nino.id)}
+                              >
+                                <FaTrash className="w-4 h-4" />
+                              </Button>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
@@ -282,12 +266,12 @@ export default function NinosPage() {
                   </TableBody>
                 </Table>
               </div>
-              {finalTotalItems > 0 && (
+              {totalItems > 0 && (
                 <PaginationControls
                   currentPage={finalPagination.page}
                   totalPages={finalPagination.totalPages}
                   itemsPerPage={finalPagination.limit}
-                  totalItems={finalTotalItems}
+                  totalItems={totalItems}
                   onPageChange={finalPagination.setPage}
                   onLimitChange={finalPagination.setLimit}
                 />

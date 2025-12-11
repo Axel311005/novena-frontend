@@ -13,6 +13,7 @@ import {
 import { toast } from 'sonner';
 import { getAsistencias, deleteAsistencia } from '../actions';
 import { getNinos } from '@/ninos/actions';
+import { useAuthStore } from '@/auth/store/auth.store';
 import {
   Card,
   CardContent,
@@ -41,12 +42,39 @@ export default function AsistenciasPage() {
   const [selectedAsistencia, setSelectedAsistencia] =
     useState<Asistencia | null>(null);
   const queryClient = useQueryClient();
+  const { user } = useAuthStore();
+  const isAdmin = user?.roles.includes('admin') ?? false;
 
   // Hook de paginación inicial
   const pagination = useTablePagination(0);
 
-  // Obtener asistencias con paginación
-  const { data: asistenciasData } = useQuery({
+  // Búsqueda con debounce - inicializar desde URL
+  const [searchInput, setSearchInput] = useState(
+    () => pagination.searchQuery
+  );
+  const debouncedSearch = useDebounce(searchInput, 500);
+
+  // Actualizar URL cuando cambia el debounced search
+  useEffect(() => {
+    if (debouncedSearch !== pagination.searchQuery) {
+      pagination.setSearch(debouncedSearch);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch]);
+
+  // Sincronizar searchInput cuando cambia la URL desde fuera (navegación, etc)
+  useEffect(() => {
+    if (
+      pagination.searchQuery !== searchInput &&
+      pagination.searchQuery !== debouncedSearch
+    ) {
+      setSearchInput(pagination.searchQuery);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pagination.searchQuery]);
+
+  // Query única para obtener asistencias con paginación
+  const { data: asistenciasData, isFetching } = useQuery({
     queryKey: [
       'asistencias',
       pagination.limit,
@@ -91,18 +119,20 @@ export default function AsistenciasPage() {
     },
   });
 
-  // Procesar datos de asistencias
-  const { totalItems } = useMemo(() => {
-    if (!asistenciasData) return { totalItems: 0 };
+  // Procesar datos de asistencias: mantener el orden exacto que viene del backend
+  const { asistencias, totalItems } = useMemo(() => {
+    if (!asistenciasData) return { asistencias: [], totalItems: 0 };
 
     if (Array.isArray(asistenciasData)) {
       return {
+        asistencias: asistenciasData,
         totalItems: asistenciasData.length,
       };
     }
 
     const paginated = asistenciasData as PaginatedResponse<Asistencia>;
     return {
+      asistencias: paginated.data || [],
       totalItems: paginated.total || 0,
     };
   }, [asistenciasData]);
@@ -122,69 +152,8 @@ export default function AsistenciasPage() {
     return [];
   }, [ninosData]);
 
-  // Recalcular paginación con totalItems real
+  // Actualizar paginación con totalItems real para los controles
   const finalPagination = useTablePagination(totalItems);
-
-  // Búsqueda con debounce - inicializar desde URL
-  const [searchInput, setSearchInput] = useState(
-    () => finalPagination.searchQuery
-  );
-  const debouncedSearch = useDebounce(searchInput, 500);
-
-  // Actualizar URL cuando cambia el debounced search
-  useEffect(() => {
-    if (debouncedSearch !== finalPagination.searchQuery) {
-      finalPagination.setSearch(debouncedSearch);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearch]);
-
-  // Sincronizar searchInput cuando cambia la URL desde fuera (navegación, etc)
-  useEffect(() => {
-    if (
-      finalPagination.searchQuery !== searchInput &&
-      finalPagination.searchQuery !== debouncedSearch
-    ) {
-      setSearchInput(finalPagination.searchQuery);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [finalPagination.searchQuery]);
-
-  // Query con los valores finales de paginación
-  const { data: finalAsistenciasData, isFetching } = useQuery({
-    queryKey: [
-      'asistencias',
-      finalPagination.limit,
-      finalPagination.offset,
-      finalPagination.searchQuery,
-    ],
-    queryFn: () =>
-      getAsistencias({
-        limit: finalPagination.limit,
-        offset: finalPagination.offset,
-        ...(finalPagination.searchQuery && { q: finalPagination.searchQuery }),
-      }),
-    placeholderData: (previousData) => previousData, // Mantener datos anteriores mientras busca
-  });
-
-  // Procesar datos finales
-  const { asistencias: finalAsistencias, totalItems: finalTotalItems } =
-    useMemo(() => {
-      if (!finalAsistenciasData) return { asistencias: [], totalItems: 0 };
-
-      if (Array.isArray(finalAsistenciasData)) {
-        return {
-          asistencias: finalAsistenciasData,
-          totalItems: finalAsistenciasData.length,
-        };
-      }
-
-      const paginated = finalAsistenciasData as PaginatedResponse<Asistencia>;
-      return {
-        asistencias: paginated.data || [],
-        totalItems: paginated.total || 0,
-      };
-    }, [finalAsistenciasData]);
 
   const deleteMutation = useMutation({
     mutationFn: deleteAsistencia,
@@ -310,14 +279,14 @@ export default function AsistenciasPage() {
               <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Input
                 type="text"
-                placeholder="Buscar por nombre del niño..."
+                placeholder="Buscar por nombre o edad..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 className="pl-10"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
-                    finalPagination.setSearch(searchInput);
+                    pagination.setSearch(searchInput);
                   }
                 }}
               />
@@ -325,7 +294,7 @@ export default function AsistenciasPage() {
           </div>
         </CardHeader>
         <CardContent className="p-0 relative">
-          {isFetching && finalAsistencias.length > 0 && (
+          {isFetching && asistencias.length > 0 && (
             <div className="absolute top-0 left-0 right-0 h-0.5 bg-orange-100 overflow-hidden z-10">
               <div
                 className="h-full bg-gradient-to-r from-orange-500 to-orange-600 animate-pulse"
@@ -333,20 +302,20 @@ export default function AsistenciasPage() {
               />
             </div>
           )}
-          {finalAsistencias.length === 0 && !isFetching ? (
+          {asistencias.length === 0 && !isFetching ? (
             <div className="flex flex-col items-center justify-center py-12 px-6">
               <FaBell className="w-16 h-16 text-yellow-500 mb-4" />
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                {finalPagination.searchQuery
+                {pagination.searchQuery
                   ? 'No se encontraron resultados'
                   : 'No hay asistencias registradas'}
               </h3>
               <p className="text-gray-600 mb-4">
-                {finalPagination.searchQuery
+                {pagination.searchQuery
                   ? 'Intenta con otros términos de búsqueda'
                   : 'Comienza registrando la primera asistencia'}
               </p>
-              {!finalPagination.searchQuery && (
+              {!pagination.searchQuery && (
                 <Button
                   onClick={() => setIsFormOpen(true)}
                   className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
@@ -363,6 +332,7 @@ export default function AsistenciasPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Niño</TableHead>
+                      <TableHead className="text-center">Edad</TableHead>
                       <TableHead className="text-center">
                         Días Asistidos
                       </TableHead>
@@ -378,7 +348,7 @@ export default function AsistenciasPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {finalAsistencias.map((asistencia) => {
+                    {asistencias.map((asistencia) => {
                       const nino = ninos.find((n) => n.id === asistencia.kidId);
                       const diasAsistidos = getDiasAsistidos(asistencia);
                       return (
@@ -394,6 +364,15 @@ export default function AsistenciasPage() {
                                   .filter(Boolean)
                                   .join(' ') || 'Sin nombre'
                               : `ID: ${asistencia.kidId}`}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {nino ? (
+                              <span className="text-sm text-gray-700">
+                                {nino.edad} {nino.edad === 1 ? 'año' : 'años'}
+                              </span>
+                            ) : (
+                              <span className="text-sm text-gray-400">-</span>
+                            )}
                           </TableCell>
                           <TableCell className="text-center">
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -421,13 +400,15 @@ export default function AsistenciasPage() {
                               >
                                 <FaEdit className="w-4 h-4" />
                               </Button>
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={() => handleDelete(asistencia.id)}
-                              >
-                                <FaTrash className="w-4 h-4" />
-                              </Button>
+                              {isAdmin && (
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => handleDelete(asistencia.id)}
+                                >
+                                  <FaTrash className="w-4 h-4" />
+                                </Button>
+                              )}
                             </div>
                           </TableCell>
                         </TableRow>
@@ -436,12 +417,12 @@ export default function AsistenciasPage() {
                   </TableBody>
                 </Table>
               </div>
-              {finalTotalItems > 0 && (
+              {totalItems > 0 && (
                 <PaginationControls
                   currentPage={finalPagination.page}
                   totalPages={finalPagination.totalPages}
                   itemsPerPage={finalPagination.limit}
-                  totalItems={finalTotalItems}
+                  totalItems={totalItems}
                   onPageChange={finalPagination.setPage}
                   onLimitChange={finalPagination.setLimit}
                 />

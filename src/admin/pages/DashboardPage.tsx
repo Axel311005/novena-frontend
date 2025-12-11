@@ -4,8 +4,9 @@ import {
   FaCalendarAlt,
   FaCheckCircle,
   FaChartLine,
+  FaCalendarDay,
 } from 'react-icons/fa';
-import { getDashboardStats } from '@/stats/actions';
+import { getDashboardStats, getStatsByDay } from '@/stats/actions';
 import {
   Card,
   CardContent,
@@ -14,10 +15,17 @@ import {
 } from '@/shared/components/ui/card';
 
 export default function DashboardPage() {
-  const { data: stats, isLoading } = useQuery({
+  const { data: stats, isLoading: isLoadingStats } = useQuery({
     queryKey: ['dashboard-stats'],
     queryFn: getDashboardStats,
   });
+
+  const { data: statsByDay, isLoading: isLoadingByDay } = useQuery({
+    queryKey: ['stats-by-day'],
+    queryFn: getStatsByDay,
+  });
+
+  const isLoading = isLoadingStats || isLoadingByDay;
 
   if (isLoading) {
     return (
@@ -103,6 +111,35 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Tarjetas de asistencia por día */}
+      {statsByDay && (
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            Asistencia por Día
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {statsByDay.byDayArray.map((dayData) => (
+              <Card key={dayData.day}>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Día {dayData.dayNumber}
+                  </CardTitle>
+                  <FaCalendarDay className="h-5 w-5 text-orange-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-orange-600">
+                    {dayData.count}
+                  </div>
+                  <p className="text-xs text-gray-600">
+                    {dayData.count === 1 ? 'niño asistió' : 'niños asistieron'}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
 
       <Card>
         <CardHeader>

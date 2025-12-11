@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -18,15 +18,12 @@ interface NinoFormProps {
 export function NinoForm({ nino, onClose, onSuccess }: NinoFormProps) {
   const queryClient = useQueryClient();
   const isEditing = !!nino;
-  const [edadValue, setEdadValue] = useState<string>('');
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
-    setValue,
-    watch,
   } = useForm<CreateNinoDto>({
     defaultValues: {
       primerNombre: '',
@@ -38,12 +35,8 @@ export function NinoForm({ nino, onClose, onSuccess }: NinoFormProps) {
     },
   });
 
-  const edad = watch('edad');
-
   useEffect(() => {
     if (nino) {
-      const edadStr = nino.edad ? String(nino.edad) : '';
-      setEdadValue(edadStr);
       reset({
         primerNombre: nino.primerNombre ?? '',
         segundoNombre: nino.segundoNombre ?? '',
@@ -53,7 +46,6 @@ export function NinoForm({ nino, onClose, onSuccess }: NinoFormProps) {
         sexo: nino.sexo || 'masculino',
       });
     } else {
-      setEdadValue('');
       reset({
         primerNombre: '',
         segundoNombre: '',
@@ -65,43 +57,8 @@ export function NinoForm({ nino, onClose, onSuccess }: NinoFormProps) {
     }
   }, [nino, reset]);
 
-  // Manejar cambio en el campo de edad
-  const handleEdadChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    
-    // Permitir borrar todo (campo vacío)
-    if (value === '') {
-      setEdadValue('');
-      setValue('edad', undefined as any, { shouldValidate: true });
-      return;
-    }
-
-    // Prevenir signo menos y caracteres no numéricos
-    if (value.includes('-') || isNaN(Number(value))) {
-      return;
-    }
-
-    const numValue = Number(value);
-    
-    // Prevenir 0
-    if (numValue === 0) {
-      return;
-    }
-
-    // Solo permitir números positivos
-    if (numValue > 0) {
-      setEdadValue(value);
-      setValue('edad', numValue, { shouldValidate: true });
-    }
-  };
-
-  // Prevenir teclas no deseadas
-  const handleEdadKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Prevenir signo menos, punto, y otros caracteres no deseados
-    if (e.key === '-' || e.key === '+' || e.key === 'e' || e.key === 'E' || e.key === '.') {
-      e.preventDefault();
-    }
-  };
+  // Generar opciones de edad del 0 al 13
+  const edades = Array.from({ length: 14 }, (_, i) => i);
 
   const createMutation = useMutation({
     mutationFn: createNino,
@@ -200,30 +157,31 @@ export function NinoForm({ nino, onClose, onSuccess }: NinoFormProps) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="edad">Edad *</Label>
-              <Input
+              <select
                 id="edad"
-                type="number"
-                min="1"
-                value={edadValue}
-                onChange={handleEdadChange}
-                onKeyDown={handleEdadKeyDown}
-                placeholder="Edad en años"
-              />
-              <input
-                type="hidden"
                 {...register('edad', { 
                   required: 'La edad es requerida',
                   valueAsNumber: true,
-                  min: { value: 1, message: 'La edad debe ser mayor a 0' },
                   validate: (value) => {
-                    if (!value || value === 0 || value < 1) {
-                      return 'La edad debe ser mayor a 0';
+                    if (value === undefined || value === null || isNaN(Number(value))) {
+                      return 'La edad es requerida';
+                    }
+                    const numValue = Number(value);
+                    if (numValue < 0 || numValue > 13) {
+                      return 'La edad debe estar entre 0 y 13 años';
                     }
                     return true;
                   }
                 })}
-                value={edad || ''}
-              />
+                className="flex h-10 w-full rounded-lg border-2 border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/20 focus-visible:border-orange-500"
+              >
+                <option value="">Seleccione una edad</option>
+                {edades.map((edad) => (
+                  <option key={edad} value={edad}>
+                    {edad} {edad === 1 ? 'año' : 'años'}
+                  </option>
+                ))}
+              </select>
               {errors.edad && (
                 <p className="text-sm text-red-500 mt-1">{errors.edad.message}</p>
               )}
