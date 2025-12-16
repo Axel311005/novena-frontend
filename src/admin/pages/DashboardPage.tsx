@@ -6,8 +6,10 @@ import {
   FaChartLine,
   FaCalendarDay,
   FaChartBar,
+  FaMale,
+  FaFemale,
 } from 'react-icons/fa';
-import { getDashboardStats, getStatsByDay, getStatsByAge } from '@/stats/actions';
+import { getDashboardStats, getStatsByDay, getStatsByAge, getStatsBySex } from '@/stats/actions';
 import {
   Card,
   CardContent,
@@ -29,6 +31,13 @@ export default function DashboardPage() {
   const { data: statsByAge, isLoading: isLoadingByAge } = useQuery({
     queryKey: ['stats-by-age'],
     queryFn: getStatsByAge,
+  });
+
+  const { data: statsBySex, isLoading: isLoadingBySex, error: errorBySex } = useQuery({
+    queryKey: ['stats-by-sex'],
+    queryFn: getStatsBySex,
+    retry: false,
+    refetchOnWindowFocus: false,
   });
 
   const isLoading = isLoadingStats || isLoadingByDay || isLoadingByAge;
@@ -117,6 +126,44 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Tarjetas de estadísticas por género */}
+      {statsBySex && statsBySex.bySexArray && (
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            Distribución por Género
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {statsBySex.bySexArray.map((sexData) => {
+              const isMasculino = sexData.sexo === 'masculino';
+              return (
+                <Card key={sexData.sexo}>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      {isMasculino ? 'Niños' : 'Niñas'}
+                    </CardTitle>
+                    {isMasculino ? (
+                      <FaMale className="h-5 w-5 text-blue-500" />
+                    ) : (
+                      <FaFemale className="h-5 w-5 text-pink-500" />
+                    )}
+                  </CardHeader>
+                  <CardContent>
+                    <div className={`text-2xl font-bold ${isMasculino ? 'text-blue-600' : 'text-pink-600'}`}>
+                      {sexData.count}
+                    </div>
+                    <p className="text-xs text-gray-600">
+                      {sexData.count === 1 
+                        ? (isMasculino ? 'niño' : 'niña')
+                        : (isMasculino ? 'niños' : 'niñas')}
+                    </p>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Tarjetas de asistencia por día */}
       {statsByDay && (

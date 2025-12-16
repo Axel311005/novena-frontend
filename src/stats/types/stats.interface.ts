@@ -129,3 +129,12 @@ export interface StatsByAge {
   totalKids: number;
 }
 
+export interface StatsBySex {
+  bySex: Record<string, number>;
+  bySexArray: Array<{
+    sexo: string;
+    count: number;
+  }>;
+  totalKids: number;
+}
+

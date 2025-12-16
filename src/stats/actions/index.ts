@@ -4,4 +4,5 @@ export * from './getKidsWithoutAttendance';
 export * from './getKidStats';
 export * from './getAttendanceSummary';
 export * from './getStatsByAge';
+export * from './getStatsBySex';
 
