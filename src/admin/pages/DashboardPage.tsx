@@ -33,7 +33,7 @@ export default function DashboardPage() {
     queryFn: getStatsByAge,
   });
 
-  const { data: statsBySex, isLoading: isLoadingBySex, error: errorBySex } = useQuery({
+  const { data: statsBySex } = useQuery({
     queryKey: ['stats-by-sex'],
     queryFn: getStatsBySex,
     retry: false,
