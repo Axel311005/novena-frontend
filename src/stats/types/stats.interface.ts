@@ -120,3 +120,12 @@ export interface AttendanceSummary {
   }>;
 }
 
+export interface StatsByAge {
+  byAge: Record<string, number>;
+  byAgeArray: Array<{
+    edad: number;
+    count: number;
+  }>;
+  totalKids: number;
+}
+

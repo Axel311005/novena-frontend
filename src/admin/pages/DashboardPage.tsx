@@ -5,8 +5,9 @@ import {
   FaCheckCircle,
   FaChartLine,
   FaCalendarDay,
+  FaChartBar,
 } from 'react-icons/fa';
-import { getDashboardStats, getStatsByDay } from '@/stats/actions';
+import { getDashboardStats, getStatsByDay, getStatsByAge } from '@/stats/actions';
 import {
   Card,
   CardContent,
@@ -25,7 +26,12 @@ export default function DashboardPage() {
     queryFn: getStatsByDay,
   });
 
-  const isLoading = isLoadingStats || isLoadingByDay;
+  const { data: statsByAge, isLoading: isLoadingByAge } = useQuery({
+    queryKey: ['stats-by-age'],
+    queryFn: getStatsByAge,
+  });
+
+  const isLoading = isLoadingStats || isLoadingByDay || isLoadingByAge;
 
   if (isLoading) {
     return (
@@ -133,6 +139,35 @@ export default function DashboardPage() {
                   </div>
                   <p className="text-xs text-gray-600">
                     {dayData.count === 1 ? 'niño asistió' : 'niños asistieron'}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Tarjetas de estadísticas por edad */}
+      {statsByAge && (
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            Distribución por Edad
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {statsByAge.byAgeArray.map((ageData) => (
+              <Card key={ageData.edad}>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    {ageData.edad} {ageData.edad === 1 ? 'año' : 'años'}
+                  </CardTitle>
+                  <FaChartBar className="h-5 w-5 text-purple-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-purple-600">
+                    {ageData.count}
+                  </div>
+                  <p className="text-xs text-gray-600">
+                    {ageData.count === 1 ? 'niño' : 'niños'}
                   </p>
                 </CardContent>
               </Card>

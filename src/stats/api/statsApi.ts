@@ -5,6 +5,7 @@ import type {
   KidsWithoutAttendance,
   KidStats,
   AttendanceSummary,
+  StatsByAge,
 } from '../types/stats.interface';
 
 export const statsApi = {
@@ -30,6 +31,11 @@ export const statsApi = {
 
   getAttendanceSummary: async (): Promise<AttendanceSummary> => {
     const { data } = await novenaApi.get<AttendanceSummary>('/stats/attendance-summary');
+    return data;
+  },
+
+  getStatsByAge: async (): Promise<StatsByAge> => {
+    const { data } = await novenaApi.get<StatsByAge>('/stats/by-age');
     return data;
   },
 };
